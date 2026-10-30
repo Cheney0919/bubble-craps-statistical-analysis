@@ -2,13 +2,13 @@
 
 ## Scope
 
-This is an observational study of two physical bubble-craps machines. It asks whether roll sequences show evidence of dependence and whether 7s occur more often in the game phase where they cost a pass-line bettor money. Conclusions apply only to the selected machines during the observed sessions.
+This is an observational study of two physical bubble-craps machines. One collector will record every formal session. The study asks whether roll sequences show evidence of dependence and whether 7s occur more often in the game phase where they cost a pass-line bettor money. Conclusions apply only to the selected machines during the observed sessions.
 
 The study does not test whether casinos intentionally respond to bets, whether all bubble-craps machines are fair, or whether a betting strategy is profitable.
 
 ## Sample and stopping rule
 
-Formal data collection consists of two machines, eight sessions per machine, and 125 rolls per session: 2,000 rolls total. Each session starts on a come-out roll. The 16 first rolls have no previous roll, leaving 1,984 adjacent pairs for repeat analyses.
+Formal data collection consists of two machines, eight sessions per machine, and 125 rolls per session: 2,000 rolls total. The single collector records sessions on one machine at a time; the machines are not observed in parallel. Each session starts on a come-out roll. The 16 first rolls have no previous roll, leaving 1,984 adjacent pairs for repeat analyses.
 
 The pilot is excluded from formal analysis. We will not stop early because a result looks significant. A session may end only for machine service, changed dice, unusable result display, material recording interruption, or venue/staff instruction. Deviations and replacement sessions are documented before analysis.
 
@@ -64,7 +64,7 @@ If a machine's total distribution differs from fair dice, H1/H2 remain valid bec
 - Method for randomly choosing session times from available windows: [fill]
 - Machine selection procedure if more than two qualifying machines are available: [fill]
 - Final table-minimum stake and bankroll confirmation: [fill]
-- Pilot agreement threshold required before formal collection: [fill]
+- Pilot reconciliation rule required before formal collection: [fill]
 - Name of the raw logging file and timestamp convention: [fill]
 - Whether the venue permits the proposed note-taking procedure: [fill]
 

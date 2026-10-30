@@ -22,11 +22,12 @@ Complete this checklist together before the first formal roll. Check an item onl
 
 ## C. Pilot requirements
 
-- [ ] We completed an approximately 50-roll double-recorded pilot.
+- [ ] The collector completed an approximately 50-roll pilot.
 - [ ] We recorded the pilot date, machine, duration, and whether a history display was available.
-- [ ] We calculated agreement between the two independent logs.
-- [ ] We decided the minimum acceptable agreement before formal collection: [write percentage and rule here].
+- [ ] We reconciled the pilot log against the machine history display and documented every discrepancy.
+- [ ] We decided the maximum number of unreconciled pilot discrepancies allowed before formal collection: [write rule here].
 - [ ] We confirmed that 125 rolls is practically achievable in one session.
+- [ ] We confirmed that one collector can record the required machine sessions sequentially and estimated the total collection time.
 - [ ] We confirmed how many recent outcomes the history display retains and whether checking every 10 rolls is feasible.
 
 ## D. Venue, financial, and privacy checks

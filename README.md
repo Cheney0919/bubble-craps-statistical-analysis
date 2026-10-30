@@ -28,7 +28,7 @@ H1 and H2 examine whether the sequence has memory; they do not simply test wheth
 - **H1 and H2 are two-sided.** Both unusually frequent and unusually rare repeats would be evidence that adjacent rolls are not behaving like an independent sequence.
 - **H2 is gated behind H1.** This limits two versions of the same “streakiness” claim from inflating false positives.
 - **H3 is one-sided.** It evaluates the specific pre-stated claim that 7s occur more often when a pass-line bettor loses.
-- **Planned sample:** two machines × eight sessions per machine × 125 rolls = 2,000 rolls total.
+- **Planned sample:** two machines × eight sessions per machine × 125 rolls = 2,000 rolls total. One collector records the machine sessions sequentially, not in parallel.
 - **No early stopping for exciting results.** Sessions end early only for documented operational reasons, such as machine service or an unusable display.
 - **Missing results are never guessed.** An unrecoverable result becomes a `gap` that breaks the adjacent sequence.
 

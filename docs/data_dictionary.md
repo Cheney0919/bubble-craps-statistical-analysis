@@ -5,6 +5,7 @@ Each row is one observed roll. Use these exact column names in `data/raw/roll_lo
 | Column | Required | Allowed values | Meaning |
 |---|---:|---|---|
 | `machine_id` | Yes | `A`, `B` | Non-identifying machine label. |
+| `collector_id` | Yes | text | Identifier for the person who recorded the session; initially one collector. |
 | `session_id` | Yes | text | Unique session label, e.g. `A_01`. |
 | `roll_number` | Yes | positive integer | Consecutive number within session. |
 | `timestamp` | Yes | ISO date/time | When the result was logged. |
