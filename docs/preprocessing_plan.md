@@ -20,7 +20,7 @@ The validation script rejects rows when:
 
 ## Phase cross-check
 
-The preparation script reconstructs the next phase from the previous result and compares it with `phase_before_roll`. A mismatch is flagged for manual review. It is never silently changed. The H3 script stops rather than using a log with unresolved phase mismatches.
+After collection, the analysis script will reconstruct the next phase from the previous result and compare it with `phase_before_roll`. A mismatch must be resolved and documented before H3 is run; it is never silently changed.
 
 ## Missing or unreliable outcomes
 
@@ -35,5 +35,5 @@ Dice outcomes have no numeric outliers: every valid value from 1 through 6 is po
 
 ## Lock before analysis
 
-After validation, create the cleaned file once, commit the code and a summary of validation findings, then run the analysis scripts. Any later correction requires a documented reason in `docs/deviations.md`.
+After validation, create the cleaned file once, commit the cleaning code and a summary of validation findings, then run the analysis scripts. Any later correction requires a documented reason in `docs/deviations.md`.
 

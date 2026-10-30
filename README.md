@@ -12,6 +12,7 @@ The study concerns only the two observed machines during the recorded sessions. 
 
 ```text
 data/raw/          Original logs. Never overwrite or silently edit these files.
+data/templates/    Blank logging template for the study.
 data/cleaned/      Cleaned analysis-ready data after collection.
 docs/              Protocol, field rules, preprocessing plan, and data dictionary.
 scripts/           Analysis scripts added after the final data format is confirmed.
@@ -24,6 +25,8 @@ results/           Generated tables, figures, and analysis summaries.
 2. Run the pilot described in [`docs/field_protocol.md`](docs/field_protocol.md).
 3. Complete every `DECIDE BEFORE DATA` item in the preregistration.
 4. Commit the final protocol before the first formal roll is recorded.
+
+Use [`docs/pre_collection_checklist.md`](docs/pre_collection_checklist.md) to document each decision and confirm the pilot before data collection.
 
 ## Collaboration record
 
