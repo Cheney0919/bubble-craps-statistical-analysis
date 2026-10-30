@@ -47,7 +47,16 @@ def permutation_test(frame: pd.DataFrame, value_column: str) -> dict[str, float 
 
 
 def h3_test(frame: pd.DataFrame) -> dict[str, float | int | str]:
-    usable = frame[frame["verification_status"].ne("gap")]
+    phase_problems = frame.loc[frame["phase_match"].eq(False)]
+    if not phase_problems.empty:
+        raise ValueError(
+            f"H3 stopped: {len(phase_problems)} logged phases disagree with craps-rule reconstruction. "
+            "Review the raw log before analysis."
+        )
+    usable = frame[
+        frame["verification_status"].ne("gap")
+        & frame["phase_match"].eq(True)
+    ]
     point = usable[usable["phase_before_roll"] == "point_set"]
     come = usable[usable["phase_before_roll"] == "come_out"]
     x1, n1 = int((point["total"] == 7).sum()), len(point)

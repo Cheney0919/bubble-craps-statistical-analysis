@@ -20,7 +20,7 @@ The validation script rejects rows when:
 
 ## Phase cross-check
 
-The analysis script reconstructs the next phase from the previous result and compares it with `phase_before_roll`. A mismatch is flagged for manual review. It is never silently changed.
+The preparation script reconstructs the next phase from the previous result and compares it with `phase_before_roll`. A mismatch is flagged for manual review. It is never silently changed. The H3 script stops rather than using a log with unresolved phase mismatches.
 
 ## Missing or unreliable outcomes
 
