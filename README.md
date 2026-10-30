@@ -1,6 +1,6 @@
 # Bubble Craps Statistical Analysis
 
-This repository contains the pre-registered protocol, data dictionary, and reproducible analysis scripts for an observational study of two physical bubble-craps machines.
+This repository contains the pre-registered protocol, data dictionary, and field procedures for an observational study of two physical bubble-craps machines.
 
 ## Study question
 
@@ -12,9 +12,9 @@ The study concerns only the two observed machines during the recorded sessions. 
 
 ```text
 data/raw/          Original logs. Never overwrite or silently edit these files.
-data/cleaned/      Validated, analysis-ready data created by scripts.
+data/cleaned/      Cleaned analysis-ready data after collection.
 docs/              Protocol, field rules, preprocessing plan, and data dictionary.
-scripts/           Reproducible Python scripts; analyses are not notebook-only.
+scripts/           Analysis scripts added after the final data format is confirmed.
 results/           Generated tables, figures, and analysis summaries.
 ```
 
@@ -24,17 +24,6 @@ results/           Generated tables, figures, and analysis summaries.
 2. Run the pilot described in [`docs/field_protocol.md`](docs/field_protocol.md).
 3. Complete every `DECIDE BEFORE DATA` item in the preregistration.
 4. Commit the final protocol before the first formal roll is recorded.
-
-## Analysis workflow
-
-```bash
-python -m pip install -r requirements.txt
-python scripts/01_validate_data.py data/raw/roll_log.csv
-python scripts/02_prepare_data.py data/raw/roll_log.csv data/cleaned/analysis_data.csv
-python scripts/03_run_analysis.py data/cleaned/analysis_data.csv --output-dir results
-```
-
-The scripts create the cleaned data and all test outputs from the logged data. Do not use a result from an interactive notebook unless the same result is reproducible from a committed script.
 
 ## Collaboration record
 
