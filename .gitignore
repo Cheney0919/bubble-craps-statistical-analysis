@@ -7,8 +7,4 @@ venv/
 results/*.png
 results/*.csv
 results/*.json
-data/raw/*.xlsx
-data/raw/*.xls
-data/raw/*.csv
-data/cleaned/*.csv
 
