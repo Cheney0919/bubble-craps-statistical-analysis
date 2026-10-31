@@ -4,8 +4,8 @@ Complete this checklist together before the first formal roll. Check an item onl
 
 ## A. Scope and statistical decisions
 
-- [ ] We agree that H1 is the primary result: a **two-sided** test of whether exact-combination repeats differ from independence.
-- [ ] We agree that H2 is also two-sided but is formally tested only after a significant H1.
+- [ ] We agree that H1 is the primary result: a **one-sided** test of whether exact-combination repeats occur more often than under independence.
+- [ ] We agree that H2 is also one-sided (excess same-total repeats) and is formally tested only after a significant H1.
 - [ ] We agree that H3 is a **one-sided** test of the specific claim that point-set rolls have more 7s than come-out rolls.
 - [ ] We understand that a non-significant result means “fail to reject,” not “prove fair.”
 - [ ] We will report H1/H2 as sequential-dependence results and H3 as a phase-association result; we will not combine them into one broad claim that a machine is unfair.

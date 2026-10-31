@@ -1,10 +1,10 @@
-# Does the Bubble Remember
+# Does the Bubble Repeat Itself?
 
-## Testing for Streaks and Badly Timed Sevens on Bubble Craps Machines
+## Testing Player Claims of Repeating Rolls and Badly Timed Sevens on a Bubble Craps Machine
 
 This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the agreed rules for data collection, cleaning, and analysis before formal data are collected.
 
-The study asks whether the observed sequence of dice outcomes is consistent with a machine with no memory. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
+The study tests two player claims: that the same dice combination tends to come up again on the next roll, and that 7s come more often when they cost a pass-line bettor. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
 
 ## Current status
 
@@ -16,16 +16,16 @@ Before the formal session, the group will complete the checklist, commit the fin
 
 | Label | Question | Planned interpretation |
 |---|---|---|
-| H1 primary | Do exact unordered dice combinations repeat more or less often than expected if consecutive rolls are independent? | Evidence for or against sequential independence. |
-| H2 secondary | Do totals repeat more or less often than expected if consecutive rolls are independent? | Tested formally only if H1 is significant. |
+| H1 primary | Do exact unordered dice combinations repeat on consecutive rolls more often than expected if rolls are independent? | Evidence about the player claim that the same dice come up again. |
+| H2 secondary | Do totals repeat on consecutive rolls more often than expected if rolls are independent? | Extends H1 to totals, which is what bets pay on. Tested formally only if H1 is significant. |
 | H3 secondary | Are 7s more common after a point is set than on come-out rolls? | Evidence about the specific “badly timed sevens” player claim. |
-| Sanity check | Do the observed totals match fair-dice frequencies? | Evidence about bias in total frequencies, not about memory. |
+| Sanity check | Do the observed totals match fair-dice frequencies? | Evidence about bias in total frequencies, not about repeats. |
 
-H1 and H2 examine whether the sequence has memory; they do not simply test whether the dice are biased. H3 compares naturally occurring game phases, so it describes an association and cannot by itself demonstrate intent or causation.
+H1 and H2 test whether consecutive rolls repeat more than chance; they do not simply test whether the dice are biased. H3 compares naturally occurring game phases, so it describes an association and cannot by itself demonstrate intent or causation.
 
 ## Key decisions already fixed
 
-- **H1 and H2 are two-sided.** Both unusually frequent and unusually rare repeats would be evidence that adjacent rolls are not behaving like an independent sequence.
+- **H1 and H2 are one-sided.** They test the specific claim that repeats happen *more* often than chance. This is also the direction a physical tumbling fault would produce and the only direction a betting strategy could exploit. An unusually low repeat rate is reported descriptively but not formally tested.
 - **H2 is gated behind H1.** This limits two versions of the same “streakiness” claim from inflating false positives.
 - **H3 is one-sided.** It evaluates the specific pre-stated claim that 7s occur more often when a pass-line bettor loses.
 - **Planned sample:** one machine × one session × 1,000 rolls, in a single visit (about 5 rolls/minute, roughly 3 hours 20 minutes of logging). One collector records the entire session. Conclusions apply only to the machine(s) observed during that visit.

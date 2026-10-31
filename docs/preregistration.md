@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is an observational study of one physical bubble-craps machine (machine A), observed in a single formal session. One collector will record the entire session. If machine A becomes unavailable partway through, the session continues on one pre-designated fallback machine (machine B). The study asks whether the roll sequence shows evidence of dependence and whether 7s occur more often in the game phase where they cost a pass-line bettor money. Conclusions apply only to the machine(s) observed during that visit; they do not generalize to other machines, other days, or other venues.
+This is an observational study of one physical bubble-craps machine (machine A), observed in a single formal session. One collector will record the entire session. If machine A becomes unavailable partway through, the session continues on one pre-designated fallback machine (machine B). The study tests two player claims: that the same dice combination comes up again on the next roll more often than chance (and, by extension, the same total), and that 7s occur more often in the game phase where they cost a pass-line bettor money. Conclusions apply only to the machine(s) observed during that visit; they do not generalize to other machines, other days, or other venues.
 
 The study does not test whether casinos intentionally respond to bets, whether all bubble-craps machines are fair, or whether a betting strategy is profitable.
 
@@ -57,31 +57,37 @@ The sample size is set by what one collector can record in a single visit, not b
 
 | Test | Expected under fair, independent dice | Smallest reliably detectable effect |
 |---|---|---|
-| H1 exact-combination repeats (about 1,000 pairs) | about 51 repeats (5.1%) | about ±1.9 percentage points |
-| H2 same-total repeats (about 1,000 pairs) | about 113 repeats (11.3%) | about ±2.8 percentage points |
+| H1 exact-combination repeats (about 1,000 pairs) | about 51 repeats (5.1%) | about +1.7 percentage points |
+| H2 same-total repeats (about 1,000 pairs) | about 113 repeats (11.3%) | about +2.5 percentage points |
 | H3 7s on point-set vs. come-out rolls (about 704 vs. 296 rolls) | 16.7% in both phases | about +6.4 percentage points |
 
 Smaller real effects may exist and go undetected.
 
-## H1 Primary test Exact-combination dependence
+## H1 Primary test Excess exact-combination repeats
 
 - Null hypothesis: consecutive unordered dice combinations are independent.
-- Alternative hypothesis: exact-combination repeats occur at a rate different from that expected under independence.
-- Test: two-sided, within-session permutation test at alpha = 0.05.
+- Alternative hypothesis: exact-combination repeats occur more often than expected under independence.
+- Test: one-sided (upper-tail), within-session permutation test at alpha = 0.05.
 - Statistic: pooled number of adjacent exact-combination repeats across valid pairs.
 - Permutations: shuffle outcomes within each contiguous analysis block separately, 10,000 times. Blocks are separated by `gap` rows (including breaks); never shuffle outcomes across a gap. With no gaps, the whole session is one block.
-- Two-sided p-value: calculate the upper and lower permutation-tail p-values with the plus-one correction, then use `min(1, 2 * min(p_lower, p_upper))`.
+- One-sided p-value: `(1 + number of permutations with at least as many repeats as observed) / (10,000 + 1)`, the upper-tail plus-one correction.
 
-This test is two-sided because either excess repetition or unusually low repetition would be evidence that the sequence is not memoryless. The test preserves each block's own outcome mix, so a biased but memoryless machine is not automatically called streaky.
+H1 tests the original player claim: the same dice combination tends to come up again on the next roll. The test is one-sided for three reasons:
 
-## H2 Secondary test Same-total dependence
+- the claim is directional;
+- excess repeats are what a physical fault such as dice not tumbling properly in the bubble would produce;
+- only excess repeats could be exploited by a betting strategy.
+
+An unusually low repeat rate would be reported descriptively, but it does not support the stated claim and is not formally tested. The test preserves each block's own outcome mix, so a biased but memoryless machine is not automatically called streaky.
+
+## H2 Secondary test Excess same-total repeats
 
 - Null hypothesis: consecutive totals are independent.
-- Alternative hypothesis: same-total repeats occur at a rate different from that expected under independence.
-- Test: the same two-sided within-session permutation procedure at alpha = 0.05.
+- Alternative hypothesis: same-total repeats occur more often than expected under independence.
+- Test: the same one-sided (upper-tail) within-session permutation procedure at alpha = 0.05.
 - Gatekeeping: conduct the formal H2 test only if H1 is significant. Otherwise report H2 descriptively without a formal rejection decision.
 
-H1 and H2 address the same broad claim of sequential dependence. Fixed-sequence gatekeeping keeps their shared false-positive risk at 5%.
+H2 extends the H1 claim to totals, which is what matters for betting: bets pay on totals, not on exact dice faces. It is directional for the same reasons as H1. Because H2 is a follow-up to the same streakiness claim, fixed-sequence gatekeeping keeps their shared false-positive risk at 5%: totals are formally tested only once excess exact repeats have been shown.
 
 ## H3 Secondary test Badly timed sevens
 
