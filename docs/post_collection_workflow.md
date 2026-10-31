@@ -3,7 +3,7 @@
 Do not inspect p-values or decide which test to emphasize before completing the steps below.
 
 1. Preserve the original `data/raw/roll_log.csv` unchanged.
-2. Count sessions, rolls, gaps, corrections, early stops, and any replacement sessions.
+2. Count rolls, gaps, breaks, corrections, and whether the session ended early.
 3. Check all field values against the data dictionary.
 4. Reconstruct game phase from roll results and compare it with the recorded phase field.
 5. Create the cleaned data file and document every change from raw data.

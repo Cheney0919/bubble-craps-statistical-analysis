@@ -1,6 +1,6 @@
 # Pre-Collection Checklist
 
-Complete this checklist together before the first formal roll. Check an item only after the group has agreed on it and recorded the decision below. The pilot does not count toward the final 2,000 rolls.
+Complete this checklist together before the first formal roll. Check an item only after the group has agreed on it and recorded the decision below. The pilot does not count toward the final 1,000 rolls.
 
 ## A. Scope and statistical decisions
 
@@ -13,22 +13,26 @@ Complete this checklist together before the first formal roll. Check an item onl
 
 ## B. Sample and stopping decisions
 
-- [ ] We confirm the planned sample: two machines × eight sessions per machine × 125 rolls per session = 2,000 rolls.
-- [ ] We confirm that every formal session starts on a come-out roll.
+- [ ] We confirm the planned sample: one machine × one session × 1,000 rolls.
+- [ ] We understand that conclusions apply only to that machine during that session.
+- [ ] We confirm that the formal session starts on a come-out roll.
 - [ ] We agree not to stop early because an observed pattern looks convincing.
-- [ ] We have decided how to replace an interrupted session, if replacement is practical.
-- [ ] We have chosen the rule for selecting two machines when more than two are available: [write rule here].
-- [ ] We have chosen the rule for selecting session times from mutual availability: [write rule here].
+- [ ] We agree that an early-ended session is analyzed as-is, with no replacement session.
+- [ ] We agree on the break procedure: if the last 3 logged rolls are uniquely found in the history, recover every later roll with no gap; otherwise log a `gap`, then every visible history roll.
+- [ ] We agree to log the most recent pre-session roll from the history as row 0 and check it against the physical dice.
+- [ ] We agree to stay on machine A after breaks, and to switch once to fallback machine B only if A becomes unavailable (serviced, dice changed, display unusable, or can't get back to it).
+- [ ] We have chosen the rule for selecting machine A and fallback machine B: [write rule here].
+- [ ] We have chosen the session date and start time: [write here].
 
 ## C. Pilot requirements
 
 - [ ] The collector completed an approximately 50-roll pilot.
-- [ ] We recorded the pilot date, machine, duration, and whether a history display was available.
-- [ ] We reconciled the pilot log against the machine history display and documented every discrepancy.
+- [ ] We recorded the pilot date, machine, and duration.
+- [ ] We reconciled the pilot log against the history display and documented every discrepancy.
 - [ ] We decided the maximum number of unreconciled pilot discrepancies allowed before formal collection: [write rule here].
-- [ ] We confirmed that 125 rolls is practically achievable in one session.
-- [ ] We confirmed that one collector can record the required machine sessions sequentially and estimated the total collection time.
-- [ ] We confirmed how many recent outcomes the history display retains and whether checking every 10 rolls is feasible.
+- [ ] We measured the pilot roll rate and estimated the duration of the 1,000-roll session (planning estimate: about 5 rolls/minute, about 3h 20m of logging, about 4h with breaks): [write measured rate here].
+- [ ] We confirmed that one collector can record 1,000 rolls in a single visit, with short breaks.
+- [ ] We confirmed how many rolls the history display keeps (expected about 20): [write number here]. With this and the roll rate, we know how long a break the history covers: [write minutes here].
 
 ## D. Venue, financial, and privacy checks
 
@@ -45,7 +49,7 @@ Complete this checklist together before the first formal roll. Check an item onl
 - [ ] We copied [`../data/templates/roll_log_template.csv`](../data/templates/roll_log_template.csv) into `data/raw/roll_log.csv` without changing its column names.
 - [ ] We confirmed a single timestamp convention: [for example, local Eastern Time in ISO format].
 - [ ] We confirmed that dice are recorded in ascending order, such as `3-4`, never `4-3`.
-- [ ] We understand that a missed outcome may be recovered only from the machine history display.
+- [ ] We understand that a missed outcome may be recovered only from the history display, while it is still visible.
 - [ ] We understand that an unrecoverable outcome is marked `gap`, never guessed.
 - [ ] We decided where the active log will be stored during a session and how it will be backed up: [write here].
 

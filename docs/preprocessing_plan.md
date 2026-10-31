@@ -15,19 +15,28 @@ The validation script rejects rows when:
 - `die_low > die_high`;
 - `total` does not equal `die_low + die_high`;
 - a point-set row lacks a valid point value;
-- a come-out row contains a point value;
-- roll numbers are duplicated, missing, or not increasing within a session.
+- a come-out, `unknown`, or `gap` row contains a point value;
+- `phase_before_roll` is `unknown` on a row that is not `recovered_from_history` or `gap`;
+- a `session_id` does not have exactly one row 0, or a row 0 is not `recovered_from_history`;
+- roll numbers are duplicated, missing, or not increasing within the session;
+- `machine_id` is not `A` or `B`, or `session_id` does not match it (`A_01` for `A`, `B_01` for `B`);
+- machine `B` rows appear without a documented reason in the notes on machine A's final row.
 
 ## Phase cross-check
 
-After collection, the analysis script will reconstruct the next phase from the previous result and compare it with `phase_before_roll`. A mismatch must be resolved and documented before H3 is run; it is never silently changed.
+After collection, the analysis script will reconstruct each roll's phase from the previous roll's phase and result, working forward through each contiguous block, and compare it with `phase_before_roll`.
+
+- **Starting point:** the first row in the block with a recorded phase. If an earlier 7 appears in the block, reconstruction can start right after it, because any 7 ends the game and the next roll is always a come-out.
+- **Recovered rows:** their `unknown` phase is filled in by this reconstruction. If it can't be determined, the row is excluded from H3.
+- **Live rows:** a mismatch must be resolved and documented before H3 is run; it is never silently changed.
+- **After a gap or a machine switch:** reconstruction never carries across a `gap` or from one machine to the other.
 
 ## Missing or unreliable outcomes
 
 - A row marked `gap` remains in the raw data. Its dice and total fields may be blank because the outcome was not recoverable.
-- A gap splits a session into separate contiguous analysis blocks. The pair leading into a gap and the pair leaving a gap are both invalid, and permutation shuffles never mix outcomes across that gap.
-- Valid non-gap rows remain eligible for descriptive total-frequency summaries.
-- Every gap, correction, and early-ended session is counted and reported.
+- A gap, including one logged for a break, splits the session into separate contiguous analysis blocks. The pair leading into a gap and the pair leaving a gap are both invalid, and permutation shuffles never mix outcomes across that gap.
+- Valid non-gap rows, including `recovered_from_history` rows and row 0, remain eligible for descriptive total-frequency summaries and the H1/H2 sequence.
+- Every gap, break, correction, and any early end to the session is counted and reported.
 
 ## Outliers
 

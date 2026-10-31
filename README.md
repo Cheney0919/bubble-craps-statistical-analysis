@@ -2,7 +2,7 @@
 
 ## Testing for Streaks and Badly Timed Sevens on Bubble Craps Machines
 
-This repository documents a pre-registered observational study of two physical bubble-craps machines. It contains the agreed rules for data collection, cleaning, and analysis before formal data are collected.
+This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the agreed rules for data collection, cleaning, and analysis before formal data are collected.
 
 The study asks whether the observed sequence of dice outcomes is consistent with a machine with no memory. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
 
@@ -28,8 +28,11 @@ H1 and H2 examine whether the sequence has memory; they do not simply test wheth
 - **H1 and H2 are two-sided.** Both unusually frequent and unusually rare repeats would be evidence that adjacent rolls are not behaving like an independent sequence.
 - **H2 is gated behind H1.** This limits two versions of the same “streakiness” claim from inflating false positives.
 - **H3 is one-sided.** It evaluates the specific pre-stated claim that 7s occur more often when a pass-line bettor loses.
-- **Planned sample:** two machines × eight sessions per machine × 125 rolls = 2,000 rolls total. One collector records the machine sessions sequentially, not in parallel.
-- **No early stopping for exciting results.** Sessions end early only for documented operational reasons, such as machine service or an unusable display.
+- **Planned sample:** one machine × one session × 1,000 rolls, in a single visit (about 5 rolls/minute, roughly 3 hours 20 minutes of logging). One collector records the entire session. Conclusions apply only to the machine(s) observed during that visit.
+- **No early stopping for exciting results.** The session ends before 1,000 rolls only for documented operational reasons, such as the fallback machine also becoming unavailable or staff instruction.
+- **The log is checked against the machine's history display** (about the last 20 rolls) every 10 rolls.
+- **The collector stays on the same machine after a break.** The session switches once, to a pre-designated fallback machine, only if the first machine becomes unavailable (serviced, dice changed, display unusable, or taken). Missed rolls alone are not a reason to switch.
+- **Short breaks lose nothing.** Rolls that happen during a break are recovered from the history display. Only a break long enough that the history no longer overlaps the log creates a `gap`, which splits the session into separate analysis blocks.
 - **Missing results are never guessed.** An unrecoverable result becomes a `gap` that breaks the adjacent sequence.
 
 The full rationale and exact decision rules are in [`docs/preregistration.md`](docs/preregistration.md).
