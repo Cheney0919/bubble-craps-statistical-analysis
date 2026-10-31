@@ -6,16 +6,21 @@ Usage (from the repository root, after scripts/prepare_data.py):
 
 Runs, in the order fixed by docs/preregistration.md:
 
+0. Descriptive statistics: frequency tables, summary statistics, and a
+   histogram of totals, before any test.
 1. Sanity check: chi-square goodness of fit of totals to fair dice, per machine.
 2. H1: one-sided within-block permutation test for excess exact-combination repeats.
 3. H2: the same test for same-total repeats, formally tested only if H1 is significant.
 4. H3: one-sided two-proportion z-test that 7s are more common on point-set rolls
-   than on come-out rolls, with Fisher's exact test for small cells and a
-   sensitivity check.
+   than on come-out rolls, with Fisher's exact test when an expected cell count
+   is below 5, and a sensitivity check.
+5. Exploratory: the 7 rate in each phase against the fair rate of 1/6.
 
+A result is significant when p <= alpha (0.05 per claim). The report also notes
+whether each formal result would pass the stricter Bonferroni threshold of 0.025.
 Descriptive 95% intervals use a moving-block bootstrap. All randomness uses a
-fixed seed, so results are reproducible. Writes results/analysis_report.md and
-results/analysis_results.json.
+fixed seed, so results are reproducible. Writes results/analysis_report.md,
+results/analysis_results.json, and results/totals_histogram.png.
 """
 
 from __future__ import annotations
@@ -26,15 +31,20 @@ import math
 import sys
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-from scipy import stats
+import matplotlib
+
+matplotlib.use("Agg")  # write image files without a display
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from scipy import stats  # noqa: E402
 
 import craps_core as core
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-ALPHA = 0.05
+ALPHA = 0.05            # per claim; see "Multiple comparisons" in docs/preregistration.md
+BONFERRONI_ALPHA = 0.025  # reported for reference only: 0.05 split across the two claims
 SEED = 20261101
 N_PERMUTATIONS = 10_000
 N_BOOTSTRAP = 10_000
@@ -43,10 +53,26 @@ MIN_ROLLS_FOR_CHI_SQUARE_B = 180  # every expected count >= 5 (180 / 36 = 5)
 PERMUTATION_CHUNK = 2_000
 
 FAIR_TOTAL_PROBS = {t: (6 - abs(t - 7)) / 36 for t in range(2, 13)}
+FAIR_SEVEN = 1 / 6
+FAIR_TOTAL_MEAN = 7.0
+FAIR_TOTAL_SD = math.sqrt(35 / 6)  # about 2.42
 FAIR_EXACT_REPEAT = 66 / 1296   # sum of squared combination probabilities
 FAIR_TOTAL_REPEAT = 146 / 1296  # sum of squared total probabilities
 COMBINATIONS = [f"{a}-{b}" for a in range(1, 7) for b in range(a, 7)]
 COMBINATION_CODE = {c: i for i, c in enumerate(COMBINATIONS)}
+FAIR_COMBINATION_PROBS = {c: (1 if c[0] == c[2] else 2) / 36 for c in COMBINATIONS}
+
+# Chart colors (see the dataviz reference palette): one series hue, neutral reference ink.
+COLOR_SERIES = "#2a78d6"
+COLOR_REFERENCE = "#52514e"
+COLOR_TEXT = "#0b0b0b"
+COLOR_GRID = "#e4e3df"
+COLOR_SURFACE = "#fcfcfb"
+
+
+def is_significant(p: float, alpha: float = ALPHA) -> bool:
+    """Ch. 3, step 6: reject the null when p <= alpha."""
+    return bool(p <= alpha)
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +90,93 @@ def blocks(df: pd.DataFrame) -> list[pd.DataFrame]:
     rolls = rolls_only(df)
     order = list(dict.fromkeys(rolls["analysis_block_id"]))
     return [rolls.loc[rolls["analysis_block_id"] == b].reset_index(drop=True) for b in order]
+
+
+# ---------------------------------------------------------------------------
+# Descriptive statistics (Ch. 1: describe before testing)
+# ---------------------------------------------------------------------------
+
+
+def describe_rolls(rolls: pd.DataFrame) -> dict:
+    """Frequency tables and summary statistics for a set of non-gap rolls."""
+    n = int(len(rolls))
+    totals = rolls["total"].astype(int)
+    counted = rolls.loc[rolls["counts_toward_sample"]]
+    phase = counted["phase_before_roll"].replace("", "unknown")
+    out = {
+        "rolls": n,
+        "totals": {
+            t: {"observed": int((totals == t).sum()), "expected": round(n * FAIR_TOTAL_PROBS[t], 1)}
+            for t in range(2, 13)
+        },
+        "combinations": {
+            c: {"observed": int((rolls["combination"] == c).sum()),
+                "expected": round(n * FAIR_COMBINATION_PROBS[c], 1)}
+            for c in COMBINATIONS
+        },
+        "phase_counts": {k: int((phase == k).sum()) for k in ("come_out", "point_set", "unknown")},
+    }
+    if n:
+        modes = totals.mode().tolist()
+        out["total_summary"] = {
+            "mean": float(totals.mean()), "median": float(totals.median()),
+            "mode": [int(m) for m in modes], "sd": float(totals.std(ddof=1)) if n > 1 else float("nan"),
+            "fair_mean": FAIR_TOTAL_MEAN, "fair_median": 7.0, "fair_mode": [7], "fair_sd": FAIR_TOTAL_SD,
+        }
+    return out
+
+
+def descriptives(df: pd.DataFrame) -> dict:
+    """Descriptive statistics pooled and, if machine B was used, per machine."""
+    rolls = rolls_only(df)
+    status = df["verification_status"].value_counts().to_dict()
+    out = {
+        "pooled": describe_rolls(rolls),
+        "data_quality": {k: int(status.get(k, 0)) for k in
+                         ("verified", "corrected_from_history", "recovered_from_history", "gap")},
+    }
+    machines = sorted(rolls["machine_id"].unique())
+    if len(machines) > 1:
+        out["by_machine"] = {m: describe_rolls(rolls.loc[rolls["machine_id"] == m]) for m in machines}
+    return out
+
+
+def plot_totals_histogram(df: pd.DataFrame, path: Path) -> Path:
+    """Observed count of each total, with the fair-dice expected count marked.
+
+    One panel per machine (small multiples) if machine B was used.
+    """
+    rolls = rolls_only(df)
+    machines = sorted(rolls["machine_id"].unique())
+    fig, axes = plt.subplots(1, len(machines), figsize=(6.5 * len(machines), 4), squeeze=False,
+                             facecolor=COLOR_SURFACE)
+    totals = list(range(2, 13))
+    for ax, m in zip(axes[0], machines):
+        g = rolls.loc[rolls["machine_id"] == m, "total"].astype(int)
+        n = len(g)
+        observed = [int((g == t).sum()) for t in totals]
+        expected = [n * FAIR_TOTAL_PROBS[t] for t in totals]
+        ax.set_facecolor(COLOR_SURFACE)
+        ax.bar(totals, observed, width=0.55, color=COLOR_SERIES, label="Observed", zorder=2)
+        ax.scatter(totals, expected, marker="_", s=420, linewidths=2, color=COLOR_REFERENCE,
+                   label="Expected (fair dice)", zorder=3)
+        ax.set_xticks(totals)
+        ax.set_xlabel("Total of the two dice", color=COLOR_TEXT)
+        ax.set_ylabel("Number of rolls", color=COLOR_TEXT)
+        title = f"Totals rolled, machine {m} ({n} rolls)" if len(machines) > 1 else f"Totals rolled ({n} rolls)"
+        ax.set_title(title, loc="left", color=COLOR_TEXT, fontsize=12)
+        ax.grid(axis="y", color=COLOR_GRID, linewidth=0.8, zorder=0)
+        ax.set_axisbelow(True)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color(COLOR_REFERENCE)
+        ax.tick_params(colors=COLOR_TEXT, length=0)
+        ax.legend(frameon=False, loc="upper right", labelcolor=COLOR_TEXT)
+    fig.tight_layout()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=150, facecolor=COLOR_SURFACE)
+    plt.close(fig)
+    return path
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +204,7 @@ def sanity_check(df: pd.DataFrame) -> dict:
         else:
             chi2, p = stats.chisquare(observed, expected)
             result.update(tested=True, chi_square=float(chi2), df=10, p_value=float(p),
-                          differs_from_fair=bool(p < ALPHA),
+                          differs_from_fair=is_significant(p),
                           small_expected_counts=bool((expected < 5).any()))
         out[machine] = result
     return out
@@ -187,10 +300,13 @@ def two_proportion_test(t: dict) -> dict:
     se = math.sqrt(pooled * (1 - pooled) * (1 / n1 + 1 / n2))
     z = (p1 - p2) / se if se > 0 else float("nan")
     p = float(stats.norm.sf(z)) if se > 0 else float("nan")
-    cells = [x1, n1 - x1, x2, n2 - x2]
+    # Expected cell counts under independence: row total x column total / grand total.
+    n, sevens = n1 + n2, x1 + x2
+    expected_cells = [n1 * sevens / n, n1 * (n - sevens) / n, n2 * sevens / n, n2 * (n - sevens) / n]
     out.update(tested=True, point_set_seven_rate=p1, come_out_seven_rate=p2,
-               rate_difference=p1 - p2, z=z, p_value_one_sided=p)
-    if min(cells) < 5:
+               rate_difference=p1 - p2, z=z, p_value_one_sided=p,
+               smallest_expected_cell=float(min(expected_cells)))
+    if min(expected_cells) < 5:
         _, fisher_p = stats.fisher_exact([[x1, n1 - x1], [x2, n2 - x2]], alternative="greater")
         out.update(fisher_exact_p_value_one_sided=float(fisher_p))
     return out
@@ -205,6 +321,25 @@ def h3_test(df: pd.DataFrame) -> dict:
     )
     sensitivity = two_proportion_test(seven_table(eligible.loc[keep]))
     return {"main": main, "sensitivity_come_out_not_after_seven": sensitivity}
+
+
+def sevens_vs_fair(df: pd.DataFrame) -> dict:
+    """Exploratory: each phase's 7 rate against the fair rate of 1/6.
+
+    One-sided exact binomial tests (more 7s than fair). Reported without a
+    reject / fail-to-reject decision; they help interpret H3 (timing vs.
+    overall bias) but are not confirmatory.
+    """
+    t = seven_table(df.loc[df["h3_eligible"]])
+    out = {}
+    for phase in ("point_set", "come_out"):
+        n, k = t[f"{phase}_rolls"], t[f"{phase}_sevens"]
+        result = {"rolls": n, "sevens": k, "fair_rate": FAIR_SEVEN}
+        if n:
+            result.update(rate=k / n, p_value_one_sided=float(stats.binomtest(k, n, FAIR_SEVEN,
+                                                                              alternative="greater").pvalue))
+        out[phase] = result
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -285,12 +420,16 @@ def run_analysis(df: pd.DataFrame, n_perm: int = N_PERMUTATIONS, n_boot: int = N
     perm_counts = permutation_repeat_counts(block_list, n_perm, rng)
 
     h1 = repeat_test(block_list, perm_counts, "exact", n_perm)
-    h1["significant"] = bool(h1["p_value_one_sided"] < ALPHA)
+    h1["significant"] = is_significant(h1["p_value_one_sided"])
+    h1["passes_bonferroni_0_025"] = is_significant(h1["p_value_one_sided"], BONFERRONI_ALPHA)
 
     h2 = repeat_test(block_list, perm_counts, "total", n_perm)
     if h1["significant"]:
         h2["formally_tested"] = True
-        h2["significant"] = bool(h2["p_value_one_sided"] < ALPHA)
+        h2["significant"] = is_significant(h2["p_value_one_sided"])
+        # Under Bonferroni, H2 would only be tested if H1 passed 0.025.
+        h2["passes_bonferroni_0_025"] = bool(h1["passes_bonferroni_0_025"]
+                                             and is_significant(h2["p_value_one_sided"], BONFERRONI_ALPHA))
     else:
         # Gatekeeping: H2 is reported descriptively, with no p-value or decision.
         h2["formally_tested"] = False
@@ -302,20 +441,24 @@ def run_analysis(df: pd.DataFrame, n_perm: int = N_PERMUTATIONS, n_boot: int = N
         p = main.get("fisher_exact_p_value_one_sided", main["p_value_one_sided"])
         main["decision_p_value"] = p
         main["decision_test"] = "fisher_exact" if "fisher_exact_p_value_one_sided" in main else "z_test"
-        main["significant"] = bool(p < ALPHA)
+        main["significant"] = is_significant(p)
+        main["passes_bonferroni_0_025"] = is_significant(p, BONFERRONI_ALPHA)
 
     results = {
-        "settings": {"alpha": ALPHA, "seed": seed, "permutations": n_perm, "bootstrap_resamples": n_boot},
+        "settings": {"alpha_per_claim": ALPHA, "bonferroni_reference_alpha": BONFERRONI_ALPHA,
+                     "seed": seed, "permutations": n_perm, "bootstrap_resamples": n_boot},
         "sample": {
             "counted_rolls": int(df["counts_toward_sample"].sum()),
             "machines": sorted(df["machine_id"].unique().tolist()),
             "analysis_blocks": len(block_list),
             "gaps": int((df["verification_status"] == "gap").sum()),
         },
+        "descriptives": descriptives(df),
         "sanity_check": sanity_check(df),
         "h1_exact_repeats": h1,
         "h2_total_repeats": h2,
         "h3_badly_timed_sevens": h3,
+        "exploratory_sevens_vs_fair": sevens_vs_fair(df),
         "bootstrap_95_intervals": moving_block_bootstrap(df, rng, n_boot=n_boot),
     }
 
@@ -351,21 +494,80 @@ def interval_text(ci) -> str:
     return f"[{pct(ci[0])}, {pct(ci[1])}]" if ci else "n/a"
 
 
-def write_report(path: Path, r: dict) -> None:
+def bonferroni_line(result: dict) -> str:
+    if not result.get("significant"):
+        return ""
+    passes = result.get("passes_bonferroni_0_025")
+    return (f"- Bonferroni check (alpha = {BONFERRONI_ALPHA}, for reference only): "
+            + ("would also be significant." if passes else "would **not** be significant at this stricter threshold."))
+
+
+def descriptive_lines(d: dict, figure_name: str | None) -> list[str]:
+    pooled = d["pooled"]
+    dq = d["data_quality"]
+    lines = [
+        "## Descriptive statistics",
+        "",
+        f"Data quality: {dq['verified']} rolls verified live, {dq['corrected_from_history']} corrected at a "
+        f"10-roll check, {dq['recovered_from_history']} recovered from the history display (including each "
+        f"machine's row 0), {dq['gap']} gap(s). Full counts are in `results/validation_summary.md`.",
+        "",
+    ]
+    if figure_name:
+        lines += [f"![Histogram of totals with fair-dice expected counts]({figure_name})", ""]
+
+    ts = pooled.get("total_summary")
+    if ts:
+        mode = ", ".join(str(m) for m in ts["mode"])
+        lines += [
+            "| Statistic of the total | Observed | Fair dice |",
+            "|---|---|---|",
+            f"| Mean | {ts['mean']:.2f} | {ts['fair_mean']:.2f} |",
+            f"| Median | {ts['median']:.1f} | {ts['fair_median']:.1f} |",
+            f"| Mode | {mode} | 7 |",
+            f"| Standard deviation | {ts['sd']:.2f} | {ts['fair_sd']:.2f} |",
+            "",
+        ]
+
+    n = pooled["rolls"]
+    lines += [f"**Frequency of totals** ({n} rolls, all machines):", "",
+              "| Total | Observed | Expected | Observed % | Expected % |", "|---|---|---|---|---|"]
+    for t, c in pooled["totals"].items():
+        lines.append(f"| {t} | {c['observed']} | {c['expected']:.1f} | "
+                     f"{pct(c['observed'] / n if n else float('nan'))} | {pct(FAIR_TOTAL_PROBS[int(t)])} |")
+
+    lines += ["", "**Frequency of dice combinations:**", "",
+              "| Combination | Observed | Expected |", "|---|---|---|"]
+    for c, v in pooled["combinations"].items():
+        lines.append(f"| {c} | {v['observed']} | {v['expected']:.1f} |")
+
+    pc = pooled["phase_counts"]
+    lines += ["", f"**Game phase of counted rolls:** {pc['come_out']} come-out, {pc['point_set']} point set, "
+                  f"{pc['unknown']} unknown (excluded from H3).", ""]
+    if "by_machine" in d:
+        lines += ["**By machine:**", "", "| Machine | Rolls | Mean total | SD of total |", "|---|---|---|---|"]
+        for m, md in d["by_machine"].items():
+            s_ = md.get("total_summary", {})
+            lines.append(f"| {m} | {md['rolls']} | {s_.get('mean', float('nan')):.2f} | {s_.get('sd', float('nan')):.2f} |")
+        lines.append("")
+    return lines
+
+
+def write_report(path: Path, r: dict, figure_name: str | None = None) -> None:
     s = r["settings"]
     boot = r["bootstrap_95_intervals"]
     lines = [
         "# Analysis Report",
         "",
-        f"Generated by `scripts/analyze.py`: alpha = {s['alpha']}, seed = {s['seed']}, "
-        f"{s['permutations']:,} permutations, {s['bootstrap_resamples']:,} bootstrap resamples.",
+        f"Generated by `scripts/analyze.py`: alpha = {s['alpha_per_claim']} per claim (reject when p <= alpha), "
+        f"seed = {s['seed']}, {s['permutations']:,} permutations, {s['bootstrap_resamples']:,} bootstrap resamples.",
         "",
         f"Counted rolls: {r['sample']['counted_rolls']}; machines: {', '.join(r['sample']['machines'])}; "
         f"analysis blocks: {r['sample']['analysis_blocks']}; gaps: {r['sample']['gaps']}.",
         "",
-        "## Sanity check: fair-dice totals",
-        "",
     ]
+    lines += descriptive_lines(r["descriptives"], figure_name)
+    lines += ["## Sanity check: fair-dice totals", ""]
     differs = False
     for m, c in r["sanity_check"].items():
         if c.get("tested"):
@@ -392,6 +594,8 @@ def write_report(path: Path, r: dict) -> None:
         + ("**Reject the null**: exact repeats occur more often than under independence."
            if h1["significant"] else "**Fail to reject the null hypothesis.**"),
     ]
+    if bonferroni_line(h1):
+        lines.append(bonferroni_line(h1))
 
     h2 = r["h2_total_repeats"]
     lines += [
@@ -405,6 +609,8 @@ def write_report(path: Path, r: dict) -> None:
         lines.append(f"- One-sided permutation p = {fmt_p(h2['p_value_one_sided'])}. "
                      + ("**Reject the null**: same-total repeats occur more often than under independence."
                         if h2["significant"] else "**Fail to reject the null hypothesis.**"))
+        if bonferroni_line(h2):
+            lines.append(bonferroni_line(h2))
     else:
         lines.append("- Not formally tested because H1 was not significant (gatekeeping). Reported descriptively only.")
 
@@ -418,18 +624,33 @@ def write_report(path: Path, r: dict) -> None:
             f"({pct(h3['come_out_seven_rate'])}; 95% CI {interval_text(boot.get('come_out_seven_rate'))}).",
             f"- Difference: {100 * h3['rate_difference']:+.2f} percentage points "
             f"(95% CI {interval_text(boot.get('seven_rate_difference'))}).",
-            f"- One-sided z = {h3['z']:.2f}, p = {fmt_p(h3['p_value_one_sided'])}."
+            f"- One-sided two-proportion z = {h3['z']:.2f}, p = {fmt_p(h3['p_value_one_sided'])}."
             + (f" Fisher's exact (one-sided) p = {fmt_p(h3['fisher_exact_p_value_one_sided'])}, used for the decision "
-               "because a cell is below 5." if "fisher_exact_p_value_one_sided" in h3 else ""),
+               "because an expected cell count is below 5." if "fisher_exact_p_value_one_sided" in h3 else ""),
             "- " + ("**Reject the null**: 7s are more common on point-set rolls."
                     if h3["significant"] else "**Fail to reject the null hypothesis.**"),
         ]
+        if bonferroni_line(h3):
+            lines.append(bonferroni_line(h3))
         sens = r["h3_badly_timed_sevens"]["sensitivity_come_out_not_after_seven"]
         if sens.get("tested"):
             lines.append(f"- Sensitivity (come-out rolls not right after a 7): difference "
                          f"{100 * sens['rate_difference']:+.2f} points, one-sided p = {fmt_p(sens['p_value_one_sided'])}.")
     else:
         lines.append(f"- Not tested ({h3.get('reason')}).")
+
+    ex = r["exploratory_sevens_vs_fair"]
+    lines += ["", "## Exploratory: 7 rate in each phase vs. the fair rate of 1/6", "",
+              "One-sided exact binomial tests, reported without a reject/fail-to-reject decision. "
+              "High in the point phase only points to timing; high in both phases points to too many 7s overall.",
+              "", "| Phase | Sevens | Rolls | Rate | Fair rate | One-sided p |", "|---|---|---|---|---|---|"]
+    for phase, label in (("point_set", "Point set"), ("come_out", "Come-out")):
+        e = ex[phase]
+        if e["rolls"]:
+            lines.append(f"| {label} | {e['sevens']} | {e['rolls']} | {pct(e['rate'])} | {pct(FAIR_SEVEN)} | "
+                         f"{fmt_p(e['p_value_one_sided'])} |")
+        else:
+            lines.append(f"| {label} | 0 | 0 | n/a | {pct(FAIR_SEVEN)} | n/a |")
 
     if "per_machine_exploratory" in r:
         lines += ["", "## By machine (exploratory)", "",
@@ -442,9 +663,13 @@ def write_report(path: Path, r: dict) -> None:
                          f"{pct(sv.get('point_set_seven_rate'))} | {pct(sv.get('come_out_seven_rate'))} |")
 
     lines += ["", "## Notes", "",
-              "- H1/H2 and H3 are separate claim families, each at alpha = 0.05; the chance of at least one false "
-              "positive across the two families is about 9.75% if both nulls are true.",
+              "- H1/H2 (repeats) and H3 (sevens) are separate claims, each tested at alpha = 0.05 with no correction "
+              "across them (see \"Multiple comparisons\" in `docs/preregistration.md`). If both nulls are true, "
+              "the chance of at least one false positive is about 9.75%. The Bonferroni lines show whether each "
+              "significant result would also pass alpha = 0.025.",
               "- A non-significant result means \"fail to reject the null hypothesis,\" not that the machine is fair.",
+              "- A significant result is evidence of a pattern on this machine during this session, worth replicating; "
+              "it is not proof that the machine is rigged.",
               ""]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines))
@@ -469,6 +694,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data", type=Path, default=REPO_ROOT / "data" / "cleaned" / "analysis_data.csv")
     parser.add_argument("--report", type=Path, default=REPO_ROOT / "results" / "analysis_report.md")
     parser.add_argument("--json", type=Path, default=REPO_ROOT / "results" / "analysis_results.json")
+    parser.add_argument("--figure", type=Path, default=None,
+                        help="histogram path (default: totals_histogram.png next to the report)")
     parser.add_argument("--permutations", type=int, default=N_PERMUTATIONS)
     parser.add_argument("--bootstrap", type=int, default=N_BOOTSTRAP)
     parser.add_argument("--seed", type=int, default=SEED)
@@ -480,10 +707,17 @@ def main(argv: list[str] | None = None) -> int:
     df = core.load_cleaned(args.data)
     results = run_analysis(df, n_perm=args.permutations, n_boot=args.bootstrap, seed=args.seed)
 
-    write_report(args.report, results)
+    figure = args.figure or args.report.parent / "totals_histogram.png"
+    plot_totals_histogram(df, figure)
+    # Link the figure relative to the report so it displays on GitHub.
+    try:
+        figure_name = str(figure.resolve().relative_to(args.report.resolve().parent))
+    except ValueError:
+        figure_name = str(figure)
+    write_report(args.report, results, figure_name)
     args.json.parent.mkdir(parents=True, exist_ok=True)
     args.json.write_text(json.dumps(to_jsonable(results), indent=2))
-    print(f"Wrote {args.report} and {args.json}.")
+    print(f"Wrote {args.report}, {figure}, and {args.json}.")
     return 0
 
 

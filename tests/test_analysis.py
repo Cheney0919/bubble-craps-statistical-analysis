@@ -8,6 +8,8 @@ import pandas as pd
 import pytest
 from conftest import write_log
 
+from scipy import stats
+
 import analyze as an
 import craps_core as core
 import prepare_data
@@ -83,10 +85,57 @@ def test_two_proportion_test_by_hand():
     assert "fisher_exact_p_value_one_sided" not in r
 
 
-def test_fisher_used_for_small_cells():
+def test_fisher_used_when_expected_count_below_5():
+    # 7 sevens in 30 rolls: expected come-out sevens = 7 * 10 / 30 = 2.3 < 5.
     t = {"point_set_rolls": 20, "point_set_sevens": 6, "come_out_rolls": 10, "come_out_sevens": 1}
     r = an.two_proportion_test(t)
+    assert r["smallest_expected_cell"] == pytest.approx(7 * 10 / 30)
     assert "fisher_exact_p_value_one_sided" in r
+
+
+def test_fisher_not_used_for_small_observed_but_adequate_expected():
+    # An observed cell of 2, but every expected count is at least 5 (Ch. 8 rule uses expected counts).
+    t = {"point_set_rolls": 100, "point_set_sevens": 2, "come_out_rolls": 100, "come_out_sevens": 20}
+    r = an.two_proportion_test(t)
+    assert r["smallest_expected_cell"] >= 5
+    assert "fisher_exact_p_value_one_sided" not in r
+
+
+def test_decision_rule_is_p_less_than_or_equal_to_alpha():
+    assert an.is_significant(0.05)
+    assert not an.is_significant(0.0501)
+    assert an.is_significant(0.025, an.BONFERRONI_ALPHA)
+    assert not an.is_significant(0.03, an.BONFERRONI_ALPHA)
+
+
+def test_sevens_vs_fair_uses_one_sided_binomial(tmp_path):
+    df = prepared_sim(tmp_path, seed=13)
+    ex = an.sevens_vs_fair(df)
+    eligible = df.loc[df["h3_eligible"]]
+    for phase in ("point_set", "come_out"):
+        rows = eligible.loc[eligible["phase_before_roll"] == phase]
+        k, n = int((rows["total"] == 7).sum()), len(rows)
+        assert ex[phase]["rolls"] == n and ex[phase]["sevens"] == k
+        expected = stats.binomtest(k, n, 1 / 6, alternative="greater").pvalue
+        assert ex[phase]["p_value_one_sided"] == pytest.approx(expected)
+
+
+def test_descriptives_match_data(tmp_path):
+    df = prepared_sim(tmp_path, seed=14)
+    d = an.descriptives(df)["pooled"]
+    rolls = an.rolls_only(df)
+    assert sum(v["observed"] for v in d["totals"].values()) == len(rolls)
+    assert sum(v["observed"] for v in d["combinations"].values()) == len(rolls)
+    assert sum(v["expected"] for v in d["totals"].values()) == pytest.approx(len(rolls), abs=0.5)
+    assert d["total_summary"]["mean"] == pytest.approx(rolls["total"].astype(int).mean())
+    assert sum(d["phase_counts"].values()) == int(df["counts_toward_sample"].sum())
+
+
+def test_bonferroni_flags_reported(tmp_path):
+    df = prepared_sim(tmp_path, seed=4, stuck_prob=0.05)
+    r = an.run_analysis(df, n_perm=2000, n_boot=200)
+    assert r["h1_exact_repeats"]["passes_bonferroni_0_025"]
+    assert "passes_bonferroni_0_025" in r["h3_badly_timed_sevens"]["main"]
 
 
 def test_bootstrap_intervals_contain_estimates(tmp_path):
@@ -137,7 +186,12 @@ def test_command_line_end_to_end(tmp_path):
     report, results = tmp_path / "report.md", tmp_path / "results.json"
     assert an.main(["--data", str(cleaned), "--report", str(report), "--json", str(results),
                     "--permutations", "300", "--bootstrap", "300"]) == 0
-    assert "## H1 (primary)" in report.read_text()
+    text = report.read_text()
+    assert "## H1 (primary)" in text
+    assert "## Descriptive statistics" in text
+    assert "## Exploratory: 7 rate" in text
+    assert "![Histogram of totals" in text
+    assert (tmp_path / "totals_histogram.png").stat().st_size > 1000
     assert json.loads(results.read_text())["sample"]["counted_rolls"] == core.TARGET_ROLLS
 
 
