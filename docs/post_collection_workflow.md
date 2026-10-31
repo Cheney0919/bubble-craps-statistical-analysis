@@ -2,10 +2,10 @@
 
 Do not inspect p-values or decide which test to emphasize before completing the steps below.
 
-1. Preserve the original `data/raw/roll_log.csv` unchanged.
-2. Count rolls, gaps, breaks, corrections, and whether the session ended early.
+1. Preserve the original `data/raw/roll_log_A.csv` (and `roll_log_B.csv`, if used) unchanged.
+2. Count rolls, gaps, breaks, corrections, recovered rolls, any machine switch, and whether the session ended early.
 3. Check all field values against the data dictionary.
-4. Reconstruct game phase from roll results and compare it with the recorded phase field.
+4. Reconstruct the game phase from roll results and check it against every phase entered at the casino.
 5. Create the cleaned data file and document every change from raw data.
 6. Commit the raw data, cleaned data, data-cleaning code, and a short validation summary.
 7. Add reproducible scripts for the pre-registered analyses.

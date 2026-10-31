@@ -8,9 +8,9 @@ The study asks whether the observed sequence of dice outcomes is consistent with
 
 ## Current status
 
-**Planning and pilot stage. No formal study data have been collected yet.**
+**Planning stage. No formal study data have been collected yet. Collection is planned for November 1, 2026 at Caesars Virginia.**
 
-Before the first formal session, the group will complete the pilot, fill in every open decision in the checklist, and commit the final protocol. The pilot is excluded from the final sample.
+Before the formal session, the group will complete the checklist, commit the final protocol, and record that commit's hash. There is no pilot; a short on-arrival check, with nothing recorded, confirms the machine's history display before logging starts.
 
 ## Research questions
 
@@ -42,9 +42,9 @@ The full rationale and exact decision rules are in [`docs/preregistration.md`](d
 Work through these documents in order:
 
 1. [`docs/pre_collection_checklist.md`](docs/pre_collection_checklist.md) — decisions that must be agreed upon and recorded.
-2. [`docs/field_protocol.md`](docs/field_protocol.md) — pilot and in-person logging procedure.
+2. [`docs/field_protocol.md`](docs/field_protocol.md) — arrival check and in-person logging procedure.
 3. [`docs/data_dictionary.md`](docs/data_dictionary.md) — required fields and allowed values for each roll.
-4. [`data/templates/roll_log_template.csv`](data/templates/roll_log_template.csv) — blank template for the actual log.
+4. [`data/templates/roll_log_template.csv`](data/templates/roll_log_template.csv) — column headers for the Google Sheet used at the casino (`dice`, `flag`, `phase`, `time`, `notes`).
 5. [`docs/preregistration.md`](docs/preregistration.md) — final study plan to commit before the first formal roll.
 
 ## Data and reproducibility

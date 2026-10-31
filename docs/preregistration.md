@@ -8,11 +8,11 @@ The study does not test whether casinos intentionally respond to bets, whether a
 
 ## Sample and stopping rule
 
-Formal data collection consists of one machine observed in one session of 1,000 rolls, collected in a single visit. At an expected rate of about 5 rolls per minute, this is roughly 3 hours 20 minutes of logging, or about 4 hours including verification and short breaks. The pilot confirms the rate.
+Formal data collection consists of one machine observed in one session of 1,000 rolls, collected in a single visit. At an expected rate of about 5 rolls per minute, this is roughly 3 hours 20 minutes of logging, or about 4 hours including verification and short breaks. The collection visit is to Caesars Virginia on November 1, 2026.
 
-The machine's history display shows roughly the last 20 rolls (the pilot confirms the exact number). The session starts on a come-out roll. Before the first live roll, the collector logs the most recent pre-session roll from the history display as row 0 and confirms it matches the physical dice at rest. If they disagree, the history display is not trusted for that machine until the discrepancy is resolved and documented. Row 0 does not count toward the 1,000 rolls. It gives roll 1 a known predecessor, so the session yields up to 1,000 adjacent pairs for repeat analyses. Each `gap` row removes the pairs on either side of it.
+The machine's history display shows roughly the last 20 rolls (the exact number is noted at the arrival check). The session starts on a come-out roll. Before the first live roll, the collector logs the most recent pre-session roll from the history display as row 0 and confirms it matches the physical dice at rest. If they disagree, the history display is not trusted for that machine until the discrepancy is resolved and documented. Row 0 does not count toward the 1,000 rolls. It gives roll 1 a known predecessor, so the session yields up to 1,000 adjacent pairs for repeat analyses. Each `gap` row removes the pairs on either side of it.
 
-The pilot is excluded from formal analysis. We will not stop early because a result looks significant. Deviations are documented before analysis.
+There is no pilot. The collector's prior observation of the machine already established the roll rate and history display. A short on-arrival check, with nothing recorded, confirms the display works before row 0 (see the field protocol). We will not stop early because a result looks significant. Deviations are documented before analysis.
 
 ### Fallback machine
 
@@ -36,18 +36,18 @@ If the session ends early, the rolls collected so far are analyzed as-is and the
 
 ### Rolls recovered from the history display
 
-A roll the collector did not see live but read from the history display is logged as `recovered_from_history`. This covers row 0, a roll missed during live logging, and rolls that happened during a break. Recovered rows:
+A roll the collector did not see live but read from the history display is flagged `R` in the raw log (`recovered_from_history` in the cleaned data). This covers row 0, a roll missed during live logging, and rolls that happened during a break. Recovered rows:
 
 - are genuine rolls of the machine, so they are part of the H1/H2 sequence and the total-distribution sanity check;
 - count toward the 1,000 rolls, except row 0;
-- are logged with phase `unknown`. The preprocessing script reconstructs their phase from the roll sequence (see the preprocessing plan). A recovered row is used in H3 only if its phase can be reconstructed.
+- have no phase entered. The preprocessing script reconstructs the phase of every roll from the roll sequence (see the preprocessing plan). A roll is used in H3 only if its phase can be determined.
 
 ### Breaks
 
 The collector may take short breaks, such as a bathroom break, and aims to return before any roll occurs. On return, the collector stays on the same machine. Before the next roll, the collector reads the history display and finds the last rolls they logged:
 
-1. **The last logged rolls are still in the history.** Match the last 3 logged rolls, in order, to a single position in the history. If 3 rolls match more than one position, extend the match until it is unique. Log every roll after that position as `recovered_from_history` with `break` in the notes. No gap is logged and the sequence is unbroken. If no rolls occurred, there is nothing to log.
-2. **The last logged rolls are no longer in the history, or no unique match is found.** Rolls were lost. Log one `gap` row with `break` in the notes, then log every roll visible in the history, oldest first, as `recovered_from_history`.
+1. **The last logged rolls are still in the history.** Match the last 3 logged rolls, in order, to a single position in the history. If 3 rolls match more than one position, extend the match until it is unique. Log every roll after that position, flagged `R`. No gap is logged and the sequence is unbroken. If no rolls occurred, there is nothing to log.
+2. **The last logged rolls are no longer in the history, or no unique match is found.** Rolls were lost. Log one `GAP` row with `break` in the notes, then log every roll visible in the history, oldest first, flagged `R`.
 
 Then resume live logging on whatever phase the machine is in. At about 5 rolls per minute, a 20-roll history covers a break of roughly 3–4 minutes with no lost rolls. Longer breaks are still allowed, but they will create a gap.
 
@@ -112,11 +112,12 @@ If the machine's total distribution differs from fair dice, H1/H2 remain valid b
 
 ## DECIDE BEFORE DATA
 
-- Casino and observation date: [fill before formal data collection]
-- Session start time: [fill]
-- Machine selection procedure for machine A and, if needed, fallback machine B: [fill]
-- Final table-minimum stake and bankroll confirmation: [fill]
-- Pilot reconciliation rule required before formal collection: [fill]
-- Name of the raw logging file and timestamp convention: [fill]
-- Whether the venue permits the proposed note-taking procedure: [fill]
+- **Casino and observation date:** Caesars Virginia, November 1, 2026.
+- **Session start time:** [fill on site, from row 0's `time`]
+- **Machine selection procedure:** on arrival, number every bubble-craps machine with an open seat and a working history display that matches its physical dice. Choose machine A with a phone random-number generator. If a fallback is needed, choose machine B the same way from the remaining qualifying machines. If only one machine qualifies, it is machine A and there is no fallback; if it becomes unavailable, the session ends early.
+- **Stake:** $3 pass-line table minimum on every bet. No bankroll cap is set.
+- **Pilot:** none; replaced by the on-arrival check in the field protocol.
+- **Raw logging files:** a Google Sheet on the collector's phone, one tab per machine, exported unchanged after the session to `data/raw/roll_log_A.csv` (and `data/raw/roll_log_B.csv` if used). Google Sheets' cloud sync and version history serve as the backup.
+- **Time convention:** local clock time, entered only for row 0, `GAP` rows, breaks, a machine switch, and the final row. All times on November 1, 2026 are Eastern Standard Time (UTC−05:00); daylight saving time ends at 2:00 AM that morning.
+- **Venue rules:** phone use at the machine is permitted, so logging on a phone is allowed.
 
