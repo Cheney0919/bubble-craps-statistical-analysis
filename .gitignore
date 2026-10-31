@@ -8,3 +8,5 @@ results/*.png
 results/*.csv
 results/*.json
 
+data/simulated/
+.pytest_cache/

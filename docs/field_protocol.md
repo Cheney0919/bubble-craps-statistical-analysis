@@ -45,7 +45,7 @@ These are not roll counts: `P6` means "the point is 6." The number matters becau
 6. **Breaks:** before leaving, enter the `time` and `break` in the notes of your last row. Try to return before any roll occurs, and always return to the same machine. Before the next roll:
    - **No rolls happened:** carry on.
    - **Your last 3 entries are still visible in the history**, at a unique position: enter every roll after them, oldest first, with flag `R`. No gap.
-   - **Otherwise:** add a `GAP` row with the `time` and `break`, then enter every visible history roll, oldest first, with flag `R`.
+   - **Otherwise:** add a `GAP` row with the `time` and `break`. Then enter the visible history rolls, oldest first, with flag `R`, **skipping the 3 oldest**. Up to 2 of those may already be in your log, so skipping them prevents logging a roll twice.
 
    If you logged a `GAP`, enter the machine's current phase (`CO`, or `P` + the point number, e.g. `P6`) on the next live roll. If there was no gap, no phase is needed. Aim to keep breaks under about 3 minutes.
 7. **Machine switch:** only if machine A becomes unavailable (serviced, dice changed, display unusable, or you can't get back to it). Missed rolls alone are not a reason to switch.

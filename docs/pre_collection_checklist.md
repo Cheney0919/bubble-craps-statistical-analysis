@@ -18,7 +18,7 @@ Complete this checklist together before the first formal roll. Check an item onl
 - [ ] We confirm that the formal session starts on a come-out roll.
 - [ ] We agree not to stop early because an observed pattern looks convincing.
 - [ ] We agree that an early-ended session is analyzed as-is, with no replacement session.
-- [ ] We agree on the break procedure: if the last 3 logged rolls are uniquely found in the history, recover every later roll with no gap; otherwise log a `gap`, then every visible history roll.
+- [ ] We agree on the break procedure: if the last 3 logged rolls are uniquely found in the history, recover every later roll with no gap; otherwise log a `GAP`, then the visible history rolls except the 3 oldest.
 - [ ] We agree to log the most recent pre-session roll from the history as row 0 and check it against the physical dice.
 - [ ] We agree to stay on machine A after breaks, and to switch once to fallback machine B only if A becomes unavailable (serviced, dice changed, display unusable, or can't get back to it).
 - [ ] We have chosen the rule for selecting machine A and fallback machine B: random choice by phone random-number generator among machines with an open seat and a working history display (full rule in the preregistration).

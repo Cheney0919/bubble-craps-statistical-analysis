@@ -47,7 +47,7 @@ A roll the collector did not see live but read from the history display is flagg
 The collector may take short breaks, such as a bathroom break, and aims to return before any roll occurs. On return, the collector stays on the same machine. Before the next roll, the collector reads the history display and finds the last rolls they logged:
 
 1. **The last logged rolls are still in the history.** Match the last 3 logged rolls, in order, to a single position in the history. If 3 rolls match more than one position, extend the match until it is unique. Log every roll after that position, flagged `R`. No gap is logged and the sequence is unbroken. If no rolls occurred, there is nothing to log.
-2. **The last logged rolls are no longer in the history, or no unique match is found.** Rolls were lost. Log one `GAP` row with `break` in the notes, then log every roll visible in the history, oldest first, flagged `R`.
+2. **The last logged rolls are no longer in the history, or no unique match is found.** Rolls were lost. Log one `GAP` row with `break` in the notes, then log the rolls visible in the history, oldest first, flagged `R`, skipping the 3 oldest. If fewer than 3 of the last logged rolls are visible, any that are can only be among the 3 oldest, so skipping them guarantees no roll is logged twice.
 
 Then resume live logging on whatever phase the machine is in. At about 5 rolls per minute, a 20-roll history covers a break of roughly 3–4 minutes with no lost rolls. Longer breaks are still allowed, but they will create a gap.
 
@@ -94,8 +94,9 @@ H2 extends the H1 claim to totals, which is what matters for betting: bets pay o
 - Null hypothesis: the probability of a 7 is the same on point-set and come-out rolls.
 - Alternative hypothesis: 7s occur more often on point-set rolls.
 - Test: one-sided two-proportion z-test at alpha = 0.05.
-- Small-count check: also run Fisher's exact test if any 2-by-2 table cell is below 5.
-- Sensitivity check: repeat the comparison using only come-out rolls whose previous observed roll was not a 7.
+- Small-count check: also run a one-sided Fisher's exact test if any 2-by-2 table cell is below 5. In that case the Fisher p-value decides H3.
+- Sensitivity check: repeat the comparison keeping all point-set rolls but only come-out rolls whose previous roll in the same analysis block exists and was not a 7.
+- Eligible rolls: counted rolls (not row 0 or `GAP` rows) whose phase is known.
 
 H3 is directional because it evaluates the specific player claim that 7s are more common when they cost a pass-line bet. A lower point-phase 7 rate will still be reported descriptively, but it does not support this stated claim.
 
@@ -110,11 +111,23 @@ If the machine's total distribution differs from fair dice, H1/H2 remain valid b
 ## Effect sizes and reporting
 
 - Report observed repeat rates, permutation baselines, rate differences, p-values, and confidence intervals.
-- Report 95% intervals for descriptive estimates using a moving-block bootstrap within the session (block length 50 consecutive rolls, 10,000 resamples, blocks never spanning a gap), not an ordinary independent-pair binomial interval.
+- Report 95% intervals for descriptive estimates using a moving-block bootstrap within the session, not an ordinary independent-pair binomial interval:
+  - windows of 50 consecutive rolls, drawn with replacement from inside analysis blocks so they never span a gap or machine;
+  - an analysis block shorter than 50 rolls is used whole;
+  - each resample draws ceil(n / 50) windows, 10,000 resamples, percentile intervals.
 - If H1/H2 are non-significant, say "fail to reject the null hypothesis," never "prove the machine is fair."
 - Report every pre-specified analysis, corrections, gaps, breaks, early stops, and deviations.
 - If machine B is used, H1/H2 permutations stay within each machine's blocks, and H3 pools rolls from both machines. Report results for each machine alongside the pooled results.
 - Label comparisons between machines A and B, between early and late parts of the session, individual combinations, shared die faces, and betting-strategy estimates as exploratory.
+
+## Fixed analysis settings
+
+The analysis is implemented in `scripts/analyze.py` and was written and tested on simulated logs before any data were collected.
+
+- **Significance:** a test is significant when its p-value is below 0.05.
+- **Randomness:** all permutations and bootstrap resamples use the fixed random seed 20261101, so the results are exactly reproducible.
+- **Permutations:** 10,000. H1 and H2 use the same shuffled row orders, with combination and total shuffled together.
+- **Bootstrap:** 10,000 resamples, as described above.
 
 ## DECIDE BEFORE DATA
 

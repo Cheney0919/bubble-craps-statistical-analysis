@@ -51,15 +51,25 @@ Work through these documents in order:
 
 The project will retain both the original roll log and the cleaned analysis data. The raw log must never be overwritten, and it must not contain names, faces, video, financial details, or other personal information.
 
-After data collection, the group will follow [`docs/post_collection_workflow.md`](docs/post_collection_workflow.md): validate the log, document any corrections or deviations, create the cleaned dataset, then add reproducible scripts for the pre-registered analyses. The course requires scripts rather than notebook-only analysis.
+The cleaning and analysis scripts were written and tested on simulated logs **before** data collection, so the analysis is fixed in code as well as in the preregistration. After data collection, the group will follow [`docs/post_collection_workflow.md`](docs/post_collection_workflow.md):
+
+```bash
+pip install -r requirements.txt
+python scripts/prepare_data.py   # validate data/raw/, write data/cleaned/analysis_data.csv
+python scripts/analyze.py        # run the pre-registered tests, write results/analysis_report.md
+```
+
+To try the pipeline on simulated data, or run the tests, see [`scripts/README.md`](scripts/README.md).
 
 ```text
 data/raw/          Original roll logs; preserved unchanged.
 data/templates/    Blank CSV logging template.
 data/cleaned/      Analysis-ready dataset created after validation.
+data/simulated/    Simulated logs for testing (git-ignored).
 docs/              Preregistration, protocols, checklists, and documentation.
-scripts/           Reproducible analysis scripts added after data format is confirmed.
-results/           Generated tables, figures, and analysis summaries.
+scripts/           Cleaning, analysis, and simulation scripts.
+tests/             Automated tests (pytest) for the scripts.
+results/           Validation summary and analysis report.
 ```
 
 ## Collaboration and course requirements
