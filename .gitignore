@@ -4,7 +4,8 @@ __pycache__/
 .venv/
 venv/
 .env
-results/*.png
 results/*.csv
 results/*.json
 
+data/simulated/
+.pytest_cache/

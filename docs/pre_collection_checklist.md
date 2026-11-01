@@ -9,7 +9,10 @@ Complete this checklist together before the first formal roll. Check an item onl
 - [ ] We agree that H3 is a **one-sided** test of the specific claim that point-set rolls have more 7s than come-out rolls.
 - [ ] We understand that a non-significant result means “fail to reject,” not “prove fair.”
 - [ ] We will report H1/H2 as sequential-dependence results and H3 as a phase-association result; we will not combine them into one broad claim that a machine is unfair.
-- [ ] We agree to use alpha = 0.05 for H1/H2 and alpha = 0.05 for H3, and to state the resulting roughly 9.75% study-wide false-positive risk across those two claim families.
+- [ ] We agree to use alpha = 0.05 per claim (reject when p ≤ α) with no correction across the repeats and sevens claims, to state the resulting roughly 9.75% overall false-positive risk, and to report whether each significant result would pass the Bonferroni threshold of 0.025 (see "Multiple comparisons" in the preregistration).
+- [ ] We agree that a Type 2 error (missing a real pattern) is the larger risk in this study, and that significant results will be reported as evidence worth replicating, not proof of rigging.
+- [ ] We agree that the comparisons of each phase's 7 rate with 1/6 are exploratory, with no reject/fail-to-reject decision.
+- [ ] We reviewed the assumptions of each test (see "Assumptions" in the preregistration).
 
 ## B. Sample and stopping decisions
 
@@ -18,7 +21,7 @@ Complete this checklist together before the first formal roll. Check an item onl
 - [ ] We confirm that the formal session starts on a come-out roll.
 - [ ] We agree not to stop early because an observed pattern looks convincing.
 - [ ] We agree that an early-ended session is analyzed as-is, with no replacement session.
-- [ ] We agree on the break procedure: if the last 3 logged rolls are uniquely found in the history, recover every later roll with no gap; otherwise log a `gap`, then every visible history roll.
+- [ ] We agree on the break procedure: if the last 3 logged rolls are uniquely found in the history, recover every later roll with no gap; otherwise log a `GAP`, then the visible history rolls except the 3 oldest.
 - [ ] We agree to log the most recent pre-session roll from the history as row 0 and check it against the physical dice.
 - [ ] We agree to stay on machine A after breaks, and to switch once to fallback machine B only if A becomes unavailable (serviced, dice changed, display unusable, or can't get back to it).
 - [ ] We have chosen the rule for selecting machine A and fallback machine B: random choice by phone random-number generator among machines with an open seat and a working history display (full rule in the preregistration).

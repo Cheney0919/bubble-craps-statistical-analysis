@@ -8,7 +8,7 @@ Preprocessing happens after collection but before hypothesis testing. The rules 
 
 ## Validation rules
 
-The validation script rejects a raw file when:
+Validation is implemented in `scripts/prepare_data.py` (logic in `scripts/craps_core.py`). Before checking, it ignores spaces around values, reads `flag` and `phase` case-insensitively (so a phone's `r` or `gap` counts as `R` or `GAP`), and drops fully blank rows, reporting how many. It then rejects a raw file when:
 
 - `dice` is not exactly two digits from 1 to 6 on a row that is not `GAP`, or is filled on a `GAP` row;
 - `flag` is not blank, `R`, `C`, or `GAP`;
@@ -19,7 +19,7 @@ The validation script rejects a raw file when:
 - a `GAP` row or the final row has no `time`;
 - `roll_log_B.csv` exists, but machine A's final row has no note giving the reason for the switch.
 
-Each problem is reported with its row number. A file is corrected only with a documented reason in `docs/deviations.md`; the raw export itself is never edited.
+Each problem is reported with its spreadsheet row number, and nothing is written until every problem is resolved. A file is corrected only with a documented reason in `docs/deviations.md`; the raw export itself is never edited.
 
 ## Phase reconstruction and cross-check
 
@@ -29,7 +29,7 @@ The script derives `phase_before_roll` and `point_value_before_roll` for every r
 - **Point set:** a 7 or the point returns the next roll to come-out. Any other total keeps the point.
 - **Starting point:** each block starts with the phase unknown. The phase becomes known at the first recorded `phase`. It also becomes known right after any 7, because a 7 always ends the game and the next roll is always a come-out.
 - **Rolls before the phase is known** have a blank phase and are excluded from H3. This usually affects only row 0 and some rolls recovered after a gap.
-- **Cross-check:** where the phase is already known from reconstruction and a `phase` was also recorded, the two must agree. A mismatch must be resolved and documented before H3 is run; it is never silently changed.
+- **Cross-check:** where the phase is already known from reconstruction and a `phase` was also recorded, the two must agree. A mismatch must be resolved and documented before H3 is run; it is never silently changed. The script stops and lists any mismatch. Only after each is documented may it be rerun with `--allow-phase-mismatch`, which uses the recorded phase from that roll onward.
 - **Never across a gap or machine switch:** reconstruction never carries across a `GAP` or from one machine to the other.
 
 ## Missing or unreliable outcomes
@@ -39,10 +39,14 @@ The script derives `phase_before_roll` and `point_value_before_roll` for every r
 - All non-gap rows, including recovered (`R`) rows and row 0, are eligible for total-frequency summaries and the H1/H2 sequence.
 - Every gap, break, correction, recovered roll, machine switch, and any early end to the session is counted and reported.
 
+## Rolls beyond the target
+
+If more than 1,000 counted rolls are logged (for example, a batch of recovered rolls near the end), only rows up to and including the 1,000th counted roll are kept. The number of excluded rows is reported.
+
 ## Outliers
 
 Dice outcomes have no numeric outliers: every valid value from 1 through 6 is possible. No valid dice roll is removed because it looks unlikely or inconvenient.
 
 ## Lock before analysis
 
-After validation, create the cleaned file once, commit the cleaning code and a summary of validation findings, then run the analysis scripts. Any later correction requires a documented reason in `docs/deviations.md`.
+After validation, create the cleaned file once (the script refuses to overwrite it without `--force`), commit it with `results/validation_summary.md`, then run the analysis scripts. Any later correction requires a documented reason in `docs/deviations.md`.
