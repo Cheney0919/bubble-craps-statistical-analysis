@@ -6,7 +6,7 @@ Counted rolls: 1000; machines: A; analysis blocks: 1; gaps: 0.
 
 ## Descriptive statistics
 
-Data quality: 999 rolls verified live, 1 corrected at a 10-roll check, 1 recovered from the history display (including each machine's row 0), 0 gap(s). Full counts are in `results/validation_summary.md`.
+Data quality: 999 rolls verified live, 1 corrected outcome(s), 1 recovered from the history display (including each machine's row 0), 0 gap(s). Full counts are in `results/validation_summary.md`.
 
 ![Histogram of totals with fair-dice expected counts](totals_histogram.png)
 
