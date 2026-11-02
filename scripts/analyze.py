@@ -508,8 +508,8 @@ def descriptive_lines(d: dict, figure_name: str | None) -> list[str]:
     lines = [
         "## Descriptive statistics",
         "",
-        f"Data quality: {dq['verified']} rolls verified live, {dq['corrected_from_history']} corrected at a "
-        f"10-roll check, {dq['recovered_from_history']} recovered from the history display (including each "
+        f"Data quality: {dq['verified']} rolls verified live, {dq['corrected_from_history']} corrected "
+        f"outcome(s), {dq['recovered_from_history']} recovered from the history display (including each "
         f"machine's row 0), {dq['gap']} gap(s). Full counts are in `results/validation_summary.md`.",
         "",
     ]

@@ -6,7 +6,7 @@ Counted rolls: 1000; machines: A; analysis blocks: 1; gaps: 0.
 
 ## Descriptive statistics
 
-Data quality: 1000 rolls verified live, 0 corrected at a 10-roll check, 1 recovered from the history display (including each machine's row 0), 0 gap(s). Full counts are in `results/validation_summary.md`.
+Data quality: 999 rolls verified live, 1 corrected outcome(s), 1 recovered from the history display (including each machine's row 0), 0 gap(s). Full counts are in `results/validation_summary.md`.
 
 ![Histogram of totals with fair-dice expected counts](totals_histogram.png)
 
@@ -27,9 +27,9 @@ Data quality: 1000 rolls verified live, 0 corrected at a 10-roll check, 1 recove
 | 5 | 103 | 111.2 | 10.29% | 11.11% |
 | 6 | 127 | 139.0 | 12.69% | 13.89% |
 | 7 | 173 | 166.8 | 17.28% | 16.67% |
-| 8 | 119 | 139.0 | 11.89% | 13.89% |
+| 8 | 120 | 139.0 | 11.99% | 13.89% |
 | 9 | 135 | 111.2 | 13.49% | 11.11% |
-| 10 | 76 | 83.4 | 7.59% | 8.33% |
+| 10 | 75 | 83.4 | 7.49% | 8.33% |
 | 11 | 58 | 55.6 | 5.79% | 5.56% |
 | 12 | 33 | 27.8 | 3.30% | 2.78% |
 
@@ -52,39 +52,39 @@ Data quality: 1000 rolls verified live, 0 corrected at a 10-roll check, 1 recove
 | 3-4 | 53 | 55.6 |
 | 3-5 | 51 | 55.6 |
 | 3-6 | 71 | 55.6 |
-| 4-4 | 25 | 27.8 |
+| 4-4 | 26 | 27.8 |
 | 4-5 | 64 | 55.6 |
 | 4-6 | 43 | 55.6 |
-| 5-5 | 33 | 27.8 |
+| 5-5 | 32 | 27.8 |
 | 5-6 | 58 | 55.6 |
 | 6-6 | 33 | 27.8 |
 
-**Game phase of counted rolls:** 301 come-out, 699 point set, 0 unknown (excluded from H3).
+**Game phase of counted rolls:** 298 come-out, 702 point set, 0 unknown (excluded from H3).
 
 ## Sanity check: fair-dice totals
 
-- Machine A: chi-square = 12.68 (df = 10), p = 0.2420, 1001 rolls. No significant difference from fair dice.
+- Machine A: chi-square = 12.59 (df = 10), p = 0.2474, 1001 rolls. No significant difference from fair dice.
 
 ## H1 (primary): excess exact-combination repeats
 
 - Observed: 43 repeats in 1000 pairs (4.30%; 95% CI [3.43%, 5.53%]).
 - Permutation baseline: 5.10% (fair dice: 5.09%). Difference: -0.80 percentage points.
-- One-sided permutation p = 0.8888. **Fail to reject the null hypothesis.**
+- One-sided permutation p = 0.8894. **Fail to reject the null hypothesis.**
 
 ## H2 (secondary, gated): excess same-total repeats
 
 - Observed: 113 repeats in 1000 pairs (11.30%; 95% CI [9.52%, 13.43%]).
-- Permutation baseline: 11.07% (fair dice: 11.27%). Difference: +0.23 percentage points.
+- Permutation baseline: 11.08% (fair dice: 11.27%). Difference: +0.22 percentage points.
 - Not formally tested because H1 was not significant (gatekeeping). Reported descriptively only.
 
 ## H3 (secondary): badly timed sevens
 
-- Point-set rolls: 122 sevens in 699 (17.45%; 95% CI [14.78%, 19.54%]).
-- Come-out rolls: 51 sevens in 301 (16.94%; 95% CI [13.80%, 20.62%]).
-- Difference: +0.51 percentage points (95% CI [-3.68%, 3.66%]).
-- One-sided two-proportion z = 0.20, p = 0.4225.
+- Point-set rolls: 122 sevens in 702 (17.38%; 95% CI [14.71%, 19.44%]).
+- Come-out rolls: 51 sevens in 298 (17.11%; 95% CI [13.99%, 20.80%]).
+- Difference: +0.26 percentage points (95% CI [-3.93%, 3.42%]).
+- One-sided two-proportion z = 0.10, p = 0.4597.
 - **Fail to reject the null hypothesis.**
-- Sensitivity (come-out rolls not right after a 7): difference +3.39 points, one-sided p = 0.1735.
+- Sensitivity (come-out rolls not right after a 7): difference +2.98 points, one-sided p = 0.2066.
 
 ## Exploratory: 7 rate in each phase vs. the fair rate of 1/6
 
@@ -92,8 +92,8 @@ One-sided exact binomial tests, reported without a reject/fail-to-reject decisio
 
 | Phase | Sevens | Rolls | Rate | Fair rate | One-sided p |
 |---|---|---|---|---|---|
-| Point set | 122 | 699 | 17.45% | 16.67% | 0.3030 |
-| Come-out | 51 | 301 | 16.94% | 16.67% | 0.4726 |
+| Point set | 122 | 702 | 17.38% | 16.67% | 0.3211 |
+| Come-out | 51 | 298 | 17.11% | 16.67% | 0.4418 |
 
 ## Notes
 

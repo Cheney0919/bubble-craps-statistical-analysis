@@ -14,7 +14,7 @@ Each row is one roll, or one `GAP` marker, in the order it occurred. Row order i
 | Column | When to fill | Allowed values | Meaning |
 |---|---|---|---|
 | `dice` | Every row except `GAP` | Two digits, each 1–6, in either order (e.g. `34` or `43`) | The two displayed dice. |
-| `flag` | Only when it applies | blank, `R`, `C`, `GAP` | blank = seen live; `R` = not seen live, read from the history display (row 0, a missed roll, rolls during a break); `C` = seen live, then corrected at a 10-roll check; `GAP` = one or more rolls lost. A `GAP` row has no dice. |
+| `flag` | Only when it applies | blank, `R`, `C`, `GAP` | blank = seen live; `R` = not seen live, read from the history display (row 0, a missed roll, rolls during a break); `C` = a recorded outcome later corrected using a documented verification source; `GAP` = one or more rolls lost. A `GAP` row has no dice. |
 | `phase` | Only on roll 1 and on the first live roll after a `GAP` or machine switch | blank, `CO`, `P4`, `P5`, `P6`, `P8`, `P9`, `P10` | Game phase shown on the machine just before that roll: come-out, or the point number. |
 | `time` | Row 0, every `GAP` row, the start and end of breaks, and the final row | Local clock time, e.g. `2:05 PM` | Eastern Time. On November 1, 2026, all session times are Eastern Standard Time (UTC−05:00). |
 | `notes` | Optional | text | Session start/end, `break`, machine switch and reason, display issues, or anything unusual. |
