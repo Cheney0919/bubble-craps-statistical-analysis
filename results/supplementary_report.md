@@ -18,7 +18,7 @@ Benchmarks (Cohen, 1988): h 0.2 small, 0.5 medium, 0.8 large; w 0.1 small, 0.3 m
 | H3 check (come-outs after a non-7) | 17.38% | 14.40% | +2.98 points | h = 0.082; risk ratio 1.21; odds ratio 1.25 |
 | Sanity check: totals vs. fair dice | chi-square = 12.59 | 1001 rolls | | w = 0.112 |
 
-**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls** (*added after data collection, as a reporting check*). With one session the bootstrap draws on about 20 non-overlapping 50-roll stretches, so it is itself noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.
+**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls** (*added after data collection, as a reporting check*). The block bootstrap resamples overlapping 50-roll windows: any of the 952 possible starting points can be drawn, and each resample strings together 21 windows. A single session holds only about 20 non-overlapping 50-roll stretches of independent information, though, so the bootstrap's estimate of spread is itself noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.
 
 | Quantity | Estimate | Block bootstrap | Assuming independence |
 |---|---|---|---|
@@ -36,12 +36,14 @@ Benchmarks (Cohen, 1988): h 0.2 small, 0.5 medium, 0.8 large; w 0.1 small, 0.3 m
 - One-sided 95% upper bound: 5.33% (moving-block bootstrap, the preregistered interval method); 5.51% (exact binomial, treating pairs as independent).
 - In stickiness terms: at most 0.25% of rolls copying the previous combination (bootstrap); 0.43% (exact).
 
-| Strategy bet | Payout | Break-even win rate | Stickiness needed | Overall repeat rate needed | Excluded (bootstrap / exact) |
+The table below compares these bounds with the overall repeat rate each strategy bet would need to break even. **It applies only under the equal-stickiness model (if the machine is streaky, it copies every combination equally often, as assumed in the design).**
+
+| Strategy bet | Payout | Break-even win rate | Stickiness needed | Overall repeat rate needed | Upper bound below this rate? (bootstrap / exact) |
 |---|---|---|---|---|---|
 | Same 2 or 12 again | 30 to 1 | 3.23% | 0.46% | 5.53% | yes / yes |
 | Same 3 or 11 again | 15 to 1 | 6.25% | 0.74% | 5.79% | yes / yes |
 
-Note: Translating the bound into stickiness assumes the machine, if streaky, copies every combination equally often (the assumption stated in the design).
+A "yes" means that, if any stickiness affected every combination equally, the data are inconsistent at the one-sided 5% level with enough stickiness for that bet to break even. It does **not** show that either bet is unprofitable: the conclusion rests on the equal-stickiness model, and the direct estimates of repeats after a 2 or 12 and after a 3 or 11 (section 5) have wide intervals that include the break-even rates. Break-even rate minus exact bound: 2 or 12: +0.02 points, 3 or 11: +0.28 points. For the 2 or 12 bet, the margin is too small to call.
 
 ## 3. Power for the design actually run
 
@@ -80,7 +82,7 @@ H1: 1,000 simulated sessions of fair dice per row (1,001 rolls, 999 shuffles eac
 A recording error that copies the previous entry with probability e produces exactly this sequence model, so the same rows show how often copy errors at rate e would make H1 falsely significant.
 
 
-H3: simulated pass-line sessions of 1,000 rolls starting on a come-out roll.
+H3: dynamic simulated pass-line sessions of 1,000 rolls, each starting on a come-out roll. The power formula in section 3 fixes the split at 702 point-set and 298 come-out rolls. Here each session produces its own split from the rules of the game, and extra point-set 7s end rounds sooner, so the elevated scenario averages 339 come-out rolls. These rows check how the test behaves in realistic sessions (its operating characteristics); they are not an exact check of the fixed-split calculation.
 
 | Point-set 7 rate | Rejected (simulated) | Monte Carlo SE | Mean come-out rolls | SD of the difference in 7 rates |
 |---|---|---|---|---|
