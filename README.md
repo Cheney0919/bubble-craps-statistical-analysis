@@ -2,17 +2,19 @@
 
 ## Testing Player Claims of Repeating Rolls and Badly Timed Sevens on a Bubble Craps Machine
 
-This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the rules for data collection, cleaning, and analysis agreed before any data were collected, the collected data, and the results.
+This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the locked protocol, preserved raw log, cleaned dataset, validation record, reproducible analysis pipeline, and results.
 
 The study tests two player claims: that the same dice combination tends to come up again on the next roll, and that 7s come more often when they cost a pass-line bettor. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
 
 ## Current status
 
-**Data collection and analysis complete.** 1,000 rolls were recorded on one machine at Caesars Virginia on November 1, 2026 (2:03–4:24 PM EST).
+**Formal data collection and analysis are complete.** One session was collected from machine A at Caesars Virginia on November 1, 2026 (2:03–4:24 PM EST). The dataset contains 1,000 counted rolls, with no gaps and no fallback-machine use.
 
+The repository preserves the original Google Sheet export and the reconciled raw log. One video-verified correction was made to roll 853; its rationale and effect on the cleaned data are documented in [`docs/deviations.md`](docs/deviations.md), along with every other deviation from the plan.
+
+- Data-quality checks: [`results/validation_summary.md`](results/validation_summary.md).
 - Pre-registered tests: [`results/analysis_report.md`](results/analysis_report.md). Neither player claim was supported: H1 one-sided p = 0.889, H3 one-sided p = 0.460 (fail to reject both).
 - Effect sizes, power for the design actually run, and labelled exploratory analyses: [`results/supplementary_report.md`](results/supplementary_report.md).
-- Deviations from the plan, with their effect on the analyses: [`docs/deviations.md`](docs/deviations.md).
 
 The sections below describe the plan as it was fixed before collection.
 
@@ -45,9 +47,9 @@ H1 and H2 test whether consecutive rolls repeat more than chance; they do not si
 
 The full rationale and exact decision rules are in [`docs/preregistration.md`](docs/preregistration.md).
 
-## Before formal data collection
+## Protocol and collection documents
 
-Work through these documents in order:
+These documents record the protocol that was locked before formal collection:
 
 1. [`docs/pre_collection_checklist.md`](docs/pre_collection_checklist.md) — decisions that must be agreed upon and recorded.
 2. [`docs/field_protocol.md`](docs/field_protocol.md) — arrival check and in-person logging procedure.
@@ -57,9 +59,9 @@ Work through these documents in order:
 
 ## Data and reproducibility
 
-The project will retain both the original roll log and the cleaned analysis data. The raw log must never be overwritten, and it must not contain names, faces, video, financial details, or other personal information.
+The project retains both the original roll log and the cleaned analysis data. The raw log must never be overwritten, and it must not contain names, faces, video, financial details, or other personal information.
 
-The cleaning and analysis scripts were written and tested on simulated logs **before** data collection, so the analysis is fixed in code as well as in the preregistration. After data collection, the group will follow [`docs/post_collection_workflow.md`](docs/post_collection_workflow.md):
+The cleaning and analysis scripts were written and tested on simulated logs **before** data collection, then applied to the reconciled raw log. To reproduce the current validation and analysis outputs, follow [`docs/post_collection_workflow.md`](docs/post_collection_workflow.md):
 
 ```bash
 pip install -r requirements.txt
