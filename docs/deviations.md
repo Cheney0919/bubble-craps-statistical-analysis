@@ -22,7 +22,7 @@
 - **Original rule affected:** Field protocol step 4: compare the last 10 entries with the history display every 10 rolls and flag fixes `C`. The privacy rule (no video of other people) was kept.
 - **When discovered:** During the session, after about the first 100 rolls.
 - **Handling:** No entries were corrected during the session. The one error found afterwards is roll 853 (entry above). Every phase logged at a checkpoint matches the phase reconstructed from the dice (`results/validation_summary.md`: 0 phase mismatches), and replaying the pass-line bets from the $100 starting balance reproduces the recorded $40 ending balance (`results/supplementary_report.md`).
-- **Effect:** None on the analysis plan. The recording error rate is reported from the post-session check (1 corrected roll in 1,000) rather than from in-session corrections.
+- **Effect:** None on the analysis plan. Data quality is reported as the errors detected and corrected in the post-session audit (1 in 1,000 rolls) rather than as in-session corrections. The audit cannot establish the true error rate: an error missed in the video review that also left the replayed balance and the checkpoint phases unchanged would go undetected.
 
 ## Pre-collection commit merged after the session started
 
