@@ -2,15 +2,21 @@
 
 ## Testing Player Claims of Repeating Rolls and Badly Timed Sevens on a Bubble Craps Machine
 
-This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the locked protocol, preserved raw log, cleaned dataset, validation record, and reproducible analysis pipeline.
+This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the locked protocol, preserved raw log, cleaned dataset, validation record, reproducible analysis pipeline, and results.
 
 The study tests two player claims: that the same dice combination tends to come up again on the next roll, and that 7s come more often when they cost a pass-line bettor. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
 
 ## Current status
 
-**Formal data collection is complete.** One session was collected from machine A at Caesars Virginia on November 1, 2026. The dataset contains 1,000 counted rolls, with no gaps and no fallback-machine use.
+**Formal data collection and analysis are complete.** One session was collected from machine A at Caesars Virginia on November 1, 2026 (2:03–4:24 PM EST). The dataset contains 1,000 counted rolls, with no gaps and no fallback-machine use.
 
-The repository preserves the original Google Sheet export and the reconciled raw log. One video-verified correction was made to roll 853; its rationale and effect on the cleaned data are documented in [`docs/deviations.md`](docs/deviations.md). See [`results/validation_summary.md`](results/validation_summary.md) for the final data-quality checks and [`results/analysis_report.md`](results/analysis_report.md) for generated results.
+The repository preserves the original Google Sheet export and the reconciled raw log. One video-verified correction was made to roll 853; its rationale and effect on the cleaned data are documented in [`docs/deviations.md`](docs/deviations.md), along with every other deviation from the plan.
+
+- Data-quality checks: [`results/validation_summary.md`](results/validation_summary.md).
+- Pre-registered tests: [`results/analysis_report.md`](results/analysis_report.md). Neither player claim was supported: H1 one-sided p = 0.889, H3 one-sided p = 0.460 (fail to reject both).
+- Effect sizes, power for the design actually run, and labelled exploratory analyses: [`results/supplementary_report.md`](results/supplementary_report.md).
+
+The sections below describe the plan as it was fixed before collection.
 
 ## Research questions
 
@@ -61,6 +67,7 @@ The cleaning and analysis scripts were written and tested on simulated logs **be
 pip install -r requirements.txt
 python scripts/prepare_data.py   # validate data/raw/, write data/cleaned/analysis_data.csv
 python scripts/analyze.py        # run the pre-registered tests, write results/analysis_report.md
+python scripts/supplementary_analysis.py  # effect sizes, power, exploratory analyses (results/supplementary_report.md)
 ```
 
 To try the pipeline on simulated data, or run the tests, see [`scripts/README.md`](scripts/README.md).
@@ -73,7 +80,7 @@ data/simulated/    Simulated logs for testing (git-ignored).
 docs/              Preregistration, protocols, checklists, and documentation.
 scripts/           Cleaning, analysis, and simulation scripts.
 tests/             Automated tests (pytest) for the scripts.
-results/           Validation summary and analysis report.
+results/           Validation summary, analysis report, supplementary report, and figures.
 ```
 
 ## Collaboration and course requirements
