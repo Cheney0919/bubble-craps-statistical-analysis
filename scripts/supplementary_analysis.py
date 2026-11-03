@@ -347,6 +347,12 @@ def simulate_h3_session(n_rolls: int, point_seven_rate: float, rng: np.random.Ge
 
 
 def simulate_h3_power(n_rolls: int, n_sims: int, detectable_rate: float, seed: int) -> list[dict]:
+    """Rejection rate of the H3 z-test in dynamic simulated sessions.
+
+    Each session plays out under pass-line rules, so the split between phases
+    varies (and shifts when point-set 7s are more likely). This checks the test's
+    operating characteristics; it is not an exact check of the fixed-split formula.
+    """
     out = []
     for i, rate in enumerate([an.FAIR_SEVEN, detectable_rate]):
         rng = np.random.default_rng([seed, 2, i])
@@ -481,12 +487,16 @@ def ruled_out(main: dict, df: pd.DataFrame, n_boot: int, seed: int) -> dict:
         "max_stickiness_block_bootstrap": max(0.0, stickiness_from_rate(upper_boot, base)),
         "max_stickiness_exact_binomial": max(0.0, stickiness_from_rate(upper_exact, base)),
         "strategy_break_even": strategy,
-        "break_even_excluded_block_bootstrap": {
+        # True when the upper bound lies below the repeat rate a bet needs to break even. Meaningful only
+        # under the equal-stickiness model; it does not show that a bet is unprofitable.
+        "upper_bound_below_break_even_block_bootstrap": {
             name: bool(upper_boot < v["overall_combination_repeat_rate"]) for name, v in strategy.items()},
-        "break_even_excluded_exact_binomial": {
+        "upper_bound_below_break_even_exact_binomial": {
             name: bool(upper_exact < v["overall_combination_repeat_rate"]) for name, v in strategy.items()},
-        "note": ("Translating the bound into stickiness assumes the machine, if streaky, copies every "
-                 "combination equally often (the assumption stated in the design)."),
+        "margin_exact_bound_to_break_even": {
+            name: v["overall_combination_repeat_rate"] - upper_exact for name, v in strategy.items()},
+        "model": ("equal-stickiness model (if the machine is streaky, it copies every combination equally "
+                  "often, as assumed in the design)"),
     }
 
 
@@ -528,13 +538,23 @@ def effect_sizes(main: dict) -> dict:
     return out
 
 
-def interval_comparison(main: dict) -> dict:
+def interval_comparison(main: dict, df: pd.DataFrame) -> dict:
     """Preregistered block-bootstrap intervals next to textbook intervals that assume independent rolls.
 
-    With one session, the block bootstrap estimates the spread from about 20
-    non-overlapping stretches of 50 rolls, so its intervals are themselves noisy.
+    The bootstrap resamples overlapping 50-roll windows (any starting point can
+    be drawn) and strings about 21 of them together per resample. A single
+    1,000-roll session holds only about 20 non-overlapping 50-roll stretches of
+    independent information, so the bootstrap's estimate of spread is itself noisy.
     """
     boot = main["bootstrap_95_intervals"]
+    window = boot["settings"]["window_length"]
+    block_sizes = [len(b) for b in an.blocks(df)]
+    bootstrap_design = {
+        "window_length": window,
+        "overlapping_windows_available": int(sum(max(n - window + 1, 1) for n in block_sizes)),
+        "windows_per_resample": boot["settings"]["windows_per_resample"],
+        "non_overlapping_stretches_in_data": int(sum(max(n // window, 1) for n in block_sizes)),
+    }
     h1, h2 = main["h1_exact_repeats"], main["h2_total_repeats"]
     t = main["h3_badly_timed_sevens"]["main"]
     x1, n1, x2, n2 = t["point_set_sevens"], t["point_set_rolls"], t["come_out_sevens"], t["come_out_rolls"]
@@ -556,6 +576,7 @@ def interval_comparison(main: dict) -> dict:
         "seven_rate_difference": {"estimate": p1 - p2, "block_bootstrap": boot["seven_rate_difference"],
                                   "independence": [p1 - p2 - 1.96 * se, p1 - p2 + 1.96 * se],
                                   "independence_method": "unpooled Wald"},
+        "bootstrap_design": bootstrap_design,
     }
 
 
@@ -847,7 +868,7 @@ def run_supplementary(df: pd.DataFrame, n_perm: int = N_PERMUTATIONS, n_boot: in
         },
         "roles": ROLES,
         "effect_sizes": effect_sizes(main),
-        "interval_comparison": interval_comparison(main),
+        "interval_comparison": interval_comparison(main, df),
         "ruled_out": ruled_out(main, df, n_boot, seed),
         "power_for_design_run": power,
         "simulation_check": {"h1_permutation_test": simulated_h1, "h3_z_test": simulated_h3},
@@ -929,14 +950,19 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
     lines += [f"| Sanity check: totals vs. fair dice | chi-square = {sc['chi_square']:.2f} | {sc['rolls']} rolls | "
               f"| w = {sc['cohen_w']:.3f} |", ""]
 
+    bd = r["interval_comparison"]["bootstrap_design"]
     labels = {"exact_repeat_rate": "H1 exact-repeat rate", "total_repeat_rate": "H2 same-total repeat rate",
               "point_set_seven_rate": "7 rate, point-set rolls", "come_out_seven_rate": "7 rate, come-out rolls",
               "seven_rate_difference": "Difference (point set minus come-out)"}
     lines += [
         f"**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls** "
         f"(*{ROLES['interval_comparison']}*). "
-        "With one session the bootstrap draws on about 20 non-overlapping 50-roll stretches, so it is itself "
-        "noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.",
+        f"The block bootstrap resamples overlapping {bd['window_length']}-roll windows: any of the "
+        f"{bd['overlapping_windows_available']:,} possible starting points can be drawn, and each resample strings "
+        f"together {bd['windows_per_resample']} windows. A single session holds only about "
+        f"{bd['non_overlapping_stretches_in_data']} non-overlapping {bd['window_length']}-roll stretches of independent "
+        "information, though, so the bootstrap's estimate of spread is itself noisy; here it is mostly narrower than "
+        "the independence-based intervals. No conclusion depends on which is used.",
         "",
         "| Quantity | Estimate | Block bootstrap | Assuming independence |",
         "|---|---|---|---|",
@@ -960,16 +986,28 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
         f"- In stickiness terms: at most {pct(ro['max_stickiness_block_bootstrap'])} of rolls copying the previous "
         f"combination (bootstrap); {pct(ro['max_stickiness_exact_binomial'])} (exact).",
         "",
+        f"The table below compares these bounds with the overall repeat rate each strategy bet would need to break "
+        f"even. **It applies only under the {ro['model']}.**",
+        "",
         "| Strategy bet | Payout | Break-even win rate | Stickiness needed | Overall repeat rate needed | "
-        "Excluded (bootstrap / exact) |",
+        "Upper bound below this rate? (bootstrap / exact) |",
         "|---|---|---|---|---|---|",
     ]
     for name, be in ro["strategy_break_even"].items():
         lines.append(f"| Same {name} again | {be['payout_to_1']} to 1 | {pct(be['break_even_rate'])} | "
                      f"{pct(be['break_even_stickiness'])} | {pct(be['overall_combination_repeat_rate'])} | "
-                     f"{'yes' if ro['break_even_excluded_block_bootstrap'][name] else 'no'} / "
-                     f"{'yes' if ro['break_even_excluded_exact_binomial'][name] else 'no'} |")
-    lines += ["", f"Note: {ro['note']}", ""]
+                     f"{'yes' if ro['upper_bound_below_break_even_block_bootstrap'][name] else 'no'} / "
+                     f"{'yes' if ro['upper_bound_below_break_even_exact_binomial'][name] else 'no'} |")
+    margins = ", ".join(f"{name}: {100 * m:+.2f} points" for name, m in ro["margin_exact_bound_to_break_even"].items())
+    caveat = ("A \"yes\" means that, if any stickiness affected every combination equally, the data are inconsistent "
+              "at the one-sided 5% level with enough stickiness for that bet to break even. It does **not** show that "
+              "either bet is unprofitable: the conclusion rests on the equal-stickiness model, and the direct estimates "
+              "of repeats after a 2 or 12 and after a 3 or 11 (section 5) have wide intervals that include the "
+              f"break-even rates. Break-even rate minus exact bound: {margins}.")
+    close = [name for name, m in ro["margin_exact_bound_to_break_even"].items() if abs(m) < 0.001]
+    if close:
+        caveat += f" For the {' and '.join(close)} bet, the margin is too small to call."
+    lines += ["", caveat, ""]
 
     lines += [
         "## 3. Power for the design actually run",
@@ -1036,7 +1074,15 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
     lines += ["", "A recording error that copies the previous entry with probability e produces exactly this "
               "sequence model, so the same rows show how often copy errors at rate e would make H1 falsely "
               "significant.", ""]
-    lines += ["", "H3: simulated pass-line sessions of 1,000 rolls starting on a come-out roll.", "",
+    h3_fixed = pw["h3_point_vs_come_out"]
+    elevated = sim["h3_z_test"][-1]
+    lines += ["", f"H3: dynamic simulated pass-line sessions of 1,000 rolls, each starting on a come-out roll. "
+              f"The power formula in section 3 fixes the split at {h3_fixed['point_set_rolls']} point-set and "
+              f"{h3_fixed['come_out_rolls']} come-out rolls. Here each session produces its own split from the rules "
+              f"of the game, and extra point-set 7s end rounds sooner, so the elevated scenario averages "
+              f"{elevated['mean_come_out_rolls']:.0f} come-out rolls. These rows check how the test behaves in "
+              "realistic sessions (its operating characteristics); they are not an exact check of the fixed-split "
+              "calculation.", "",
               "| Point-set 7 rate | Rejected (simulated) | Monte Carlo SE | Mean come-out rolls | "
               "SD of the difference in 7 rates |", "|---|---|---|---|---|"]
     for row in sim["h3_z_test"]:

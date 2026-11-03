@@ -120,6 +120,9 @@ def test_end_to_end(tmp_path):
                             "exploratory", "data_quality_balance_replay"}
     ro = results["ruled_out"]
     assert ro["upper_bound_95_exact_binomial"] > ro["observed_rate"]
+    assert set(ro["upper_bound_below_break_even_exact_binomial"]) == set(sup.STRATEGY_BETS)
+    bd = results["interval_comparison"]["bootstrap_design"]
+    assert bd["overlapping_windows_available"] > bd["non_overlapping_stretches_in_data"]
     assert len(fig["shuffled_exact"]) == 500
 
 
