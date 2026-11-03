@@ -15,14 +15,17 @@ top of them. Nothing here changes a confirmatory decision.
 2. What the data rule out: one-sided 95% upper bounds on the exact-combination
    repeat rate, translated into "stickiness" (the share of rolls that copy the
    previous combination) and compared with the betting strategy's break-even.
-3. Power for the design actually run (1,000 pairs; 702 point-set and 298
-   come-out rolls): the smallest effect each test detects with 80% power, using
-   the normal approximation with Cohen's h (the same calculation as statsmodels'
-   NormalIndPower), plus a simulation of the permutation test and z-test.
-4. Exploratory analyses, labelled as such and reported without decisions:
-   repeats after a 2/12 and after a 3/11 (the motivating strategy), a weighted
-   repeat count, consecutive rolls sharing a face, first vs. second half of the
-   session, repeats by combination, and face/combination frequencies.
+3. Sensitivity analysis for the design actually run (1,000 pairs; 702
+   point-set and 298 come-out rolls): the smallest effect each test detects with
+   80% power, using the normal approximation with Cohen's h (the same
+   calculation as statsmodels' NormalIndPower), plus a simulation of the
+   permutation test and z-test. This is not post hoc "observed power".
+4. Exploratory analyses, reported without decisions and tagged by source.
+   Listed in the preregistration: repeats after a 2/12 and after a 3/11 (the
+   motivating strategy), consecutive rolls sharing a face, first vs. second half
+   of the session, and repeats by combination. Added after data collection
+   (hypothesis-generating only): a weighted repeat count and face/combination
+   frequency tests.
 5. Data-quality check: a replay of the $3 pass-line bets from the $100 start,
    compared with the recorded ending balance.
 
@@ -78,6 +81,30 @@ COMBO_FACES = np.array([[int(c[0]), int(c[2])] for c in an.COMBINATIONS], dtype=
 # Weighted repeat count: a repeat counts 1 / (fair chance of that combination),
 # scaled so a repeated non-double counts 1 and a repeated double counts 2.
 REPEAT_WEIGHTS = (2 / 36) / COMBO_PROBS
+
+# Where each analysis comes from. "Listed in the preregistration" refers to
+# docs/preregistration.md ("Effect sizes and reporting"), which names early vs.
+# late, individual combinations, shared die faces, and betting-strategy
+# estimates as exploratory. Everything else here was added after the data were
+# collected and is descriptive or hypothesis-generating only.
+PREREGISTERED = "listed in the preregistration"
+POST_HOC = "added after data collection"
+ROLES = {
+    "effect_sizes": "descriptive; " + POST_HOC + " to meet the reporting requirements",
+    "interval_comparison": POST_HOC + ", as a reporting check",
+    "ruled_out": POST_HOC + " (planned in earlier drafts; the final preregistration specifies two-sided intervals)",
+    "power_for_design_run": "sensitivity analysis for the achieved design (not post hoc observed power)",
+    "simulation_check": "checks how the tests behave; not an analysis of the data",
+    "exploratory.strategy_repeats": PREREGISTERED + " as betting-strategy estimates",
+    "exploratory.weighted_repeat_count": POST_HOC + "; a supporting check in planning drafts, not in the final "
+                                         "preregistration",
+    "exploratory.shared_face": PREREGISTERED + " as shared die faces",
+    "exploratory.first_vs_second_half": PREREGISTERED + " as early vs. late",
+    "exploratory.repeats_by_combination": PREREGISTERED + " as individual combinations",
+    "exploratory.bias_checks": POST_HOC,
+    "data_quality_balance_replay": "data-quality check (see docs/deviations.md); the win rate is descriptive, "
+                                   + POST_HOC,
+}
 
 COLOR_SERIES = an.COLOR_SERIES
 COLOR_SERIES_2 = "#eb6834"     # categorical slot 2 of the reference palette
@@ -179,6 +206,19 @@ def power_one_sample(p1: float, p0: float, n: int, alpha: float = ALPHA) -> floa
     return float(stats.norm.sf(z(1 - alpha) - cohen_h(p1, p0) * math.sqrt(n)))
 
 
+def overlap_variance_inflation(probs, n_pairs: int) -> float:
+    """Extra variance of a repeat count from overlapping pairs, relative to the binomial formula.
+
+    Under independence, each pair repeats with q = sum(p^2), and neighbouring
+    pairs (which share a roll) both repeat with probability sum(p^3), so
+    Var = n q (1 - q) + 2 (n - 1) (sum(p^3) - q^2). Returns Var / (n q (1 - q)) - 1.
+    """
+    p = np.asarray(probs, dtype=float)
+    q = float((p ** 2).sum())
+    cov = float((p ** 3).sum()) - q ** 2
+    return 2 * (n_pairs - 1) * cov / (n_pairs * q * (1 - q))
+
+
 def pairs_needed(p1: float, p0: float, alpha: float = ALPHA, power: float = POWER) -> int:
     return math.ceil(((z(1 - alpha) + z(power)) / cohen_h(p1, p0)) ** 2)
 
@@ -220,6 +260,11 @@ def power_analysis(main: dict) -> dict:
     one = mde_one_sample(n_point, fair7)
     out["exploratory_point_set_vs_one_sixth"] = {"rolls": n_point, "detectable_rate": one["p1"],
                                                  "cohen_h": one["h"]}
+    # How much the formulas' independent-pairs assumption understates the variance.
+    out["overlap_variance_inflation"] = {
+        "combinations": overlap_variance_inflation(COMBO_PROBS, n_pairs),
+        "totals": overlap_variance_inflation([an.FAIR_TOTAL_PROBS[t] for t in range(2, 13)], n_pairs),
+    }
 
     # The strategy's break-even, under stickiness that applies equally to every combination.
     be = break_even(15, 2 / 36)
@@ -800,6 +845,7 @@ def run_supplementary(df: pd.DataFrame, n_perm: int = N_PERMUTATIONS, n_boot: in
             "h3_p_value": main["h3_badly_timed_sevens"]["main"]["decision_p_value"],
             "h3_significant": main["h3_badly_timed_sevens"]["main"]["significant"],
         },
+        "roles": ROLES,
         "effect_sizes": effect_sizes(main),
         "interval_comparison": interval_comparison(main),
         "ruled_out": ruled_out(main, df, n_boot, seed),
@@ -855,6 +901,10 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
         "",
         "## 1. Effect sizes for the pre-registered comparisons",
         "",
+        f"*Role: {ROLES['effect_sizes']}.* For H1 and H2, Cohen's h is the standardized gap between the observed "
+        "repeat rate and the shuffled baseline. It describes the size of the difference; the permutation test "
+        "remains the formal inference, because adjacent pairs overlap.",
+        "",
         f"Benchmarks (Cohen, 1988): h {es['benchmarks']['cohen_h']}; w {es['benchmarks']['cohen_w']}.",
         "",
         "| Comparison | Observed | Reference | Difference | Effect size |",
@@ -883,7 +933,8 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
               "point_set_seven_rate": "7 rate, point-set rolls", "come_out_seven_rate": "7 rate, come-out rolls",
               "seven_rate_difference": "Difference (point set minus come-out)"}
     lines += [
-        "**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls.** "
+        f"**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls** "
+        f"(*{ROLES['interval_comparison']}*). "
         "With one session the bootstrap draws on about 20 non-overlapping 50-roll stretches, so it is itself "
         "noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.",
         "",
@@ -898,6 +949,8 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
 
     lines += [
         "## 2. What the data rule out (H1)",
+        "",
+        f"*Role: {ROLES['ruled_out']}.*",
         "",
         f"- Observed exact-repeat rate {pct(ro['observed_rate'])}; shuffled baseline "
         f"{pct(ro['permutation_baseline_rate'])}.",
@@ -920,6 +973,10 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
 
     lines += [
         "## 3. Power for the design actually run",
+        "",
+        "This is a sensitivity analysis for the achieved design: it restates the smallest effect each test detects "
+        "with the sample actually collected. It is not post hoc \"observed power\", which would plug in the "
+        "observed effect and only restate the p-value.",
         "",
         "One-sided alpha = 0.05 and 80% power, normal approximation with Cohen's h (equivalent to statsmodels' "
         "`NormalIndPower`). The last column is the preregistration's quicker approximation, which uses the "
@@ -955,9 +1012,16 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
         f"{pct(be['power_with_this_sample'], 0)} of the time with this sample; 80% power would need about "
         f"{be['pairs_needed_for_80_percent_power']:,} pairs.",
         "",
+        f"The formulas treat pairs as independent. Under independence, overlapping pairs (which share a roll) "
+        f"raise the variance of the repeat count by only "
+        f"{pct(pw['overlap_variance_inflation']['combinations'], 1)} for combinations and "
+        f"{pct(pw['overlap_variance_inflation']['totals'], 1)} for totals; section 4 checks the tests directly.",
+        "",
         f"![H1 power curve]({figure_names['power']})",
         "",
         "## 4. Simulation check of the tests",
+        "",
+        f"*Role: {ROLES['simulation_check']}.*",
         "",
         f"H1: {sim['h1_permutation_test'][0]['sessions']:,} simulated sessions of fair dice per row (1,001 rolls, "
         f"{sim['h1_permutation_test'][0]['shuffles_per_session']} shuffles each), in which each roll copies the "
@@ -969,6 +1033,9 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
     for row in sim["h1_permutation_test"]:
         lines.append(f"| {pct(row['stickiness'], 1)} | {pct(row['repeat_rate'])} | {pct(row['rejection_rate'], 1)} | "
                      f"{pct(row['monte_carlo_se'], 1)} | {pct(row['analytic_power'], 1)} |")
+    lines += ["", "A recording error that copies the previous entry with probability e produces exactly this "
+              "sequence model, so the same rows show how often copy errors at rate e would make H1 falsely "
+              "significant.", ""]
     lines += ["", "H3: simulated pass-line sessions of 1,000 rolls starting on a come-out roll.", "",
               "| Point-set 7 rate | Rejected (simulated) | Monte Carlo SE | Mean come-out rolls | "
               "SD of the difference in 7 rates |", "|---|---|---|---|---|"]
@@ -985,7 +1052,10 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
               "section 1 is the safer reading for H3."]
 
     lines += ["", "## 5. Exploratory analyses (no reject / fail-to-reject decisions)", "",
-              "**Repeats after the strategy's numbers** (exact 95% intervals):", "",
+              f"Each item is tagged *{PREREGISTERED}* (named as exploratory in `docs/preregistration.md`) or "
+              f"*{POST_HOC}* (chosen after seeing the data; hypothesis-generating only).", "",
+              f"**Repeats after the strategy's numbers** (exact 95% intervals; *{ROLES['exploratory.strategy_repeats']}*):",
+              "",
               "| After a... | Rolls following | Same total again | Rate [95% CI] | Fair | Break-even |",
               "|---|---|---|---|---|---|"]
     for name, v in ex["strategy_repeats"].items():
@@ -996,24 +1066,28 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
     bc = ex["bias_checks"]
     lines += [
         "",
-        f"- **Weighted repeat count** (a repeated double counts 2, any other repeat 1; listed as a supporting "
-        f"check in planning drafts but not in the final preregistration): observed {w['observed']:.0f}, "
+        f"- **Weighted repeat count** (*{ROLES['exploratory.weighted_repeat_count']}*; a repeated double counts 2, "
+        f"any other repeat 1): observed {w['observed']:.0f}, "
         f"shuffled mean {w['permutation_mean']:.1f}, one-sided p = {w['p_value_one_sided']:.3f}.",
-        f"- **Consecutive rolls sharing at least one face** (single sticky die): {pct(f['observed_rate'], 1)} "
+        f"- **Consecutive rolls sharing at least one face** (*{ROLES['exploratory.shared_face']}*; single "
+        f"sticky die): {pct(f['observed_rate'], 1)} "
         f"observed vs. {pct(f['permutation_rate'], 1)} in shuffles (fair dice {pct(f['fair_dice_rate'], 1)}); "
         f"one-sided p = {f['p_value_one_sided']:.3f}.",
-        f"- **First vs. second half:** exact-repeat rate {pct(hv['first']['exact_repeat_rate'], 1)} vs. "
+        f"- **First vs. second half** (*{ROLES['exploratory.first_vs_second_half']}*): exact-repeat rate "
+        f"{pct(hv['first']['exact_repeat_rate'], 1)} vs. "
         f"{pct(hv['second']['exact_repeat_rate'], 1)} (Fisher two-sided p = {hv['repeat_rate_fisher_p_two_sided']:.2f}); "
         f"point-set 7 rate {pct(hv['first']['point_set_seven_rate'], 1)} vs. "
         f"{pct(hv['second']['point_set_seven_rate'], 1)} (p = {hv['point_set_seven_rate_fisher_p_two_sided']:.2f}).",
-        f"- **Combination frequencies** (21 categories, {bc['combinations']['rolls']} rolls): chi-square = "
+        f"- **Combination frequencies** (*{ROLES['exploratory.bias_checks']}*; 21 categories, "
+        f"{bc['combinations']['rolls']} rolls): chi-square = "
         f"{bc['combinations']['chi_square']:.2f}, df = 20, p = {bc['combinations']['p_value']:.3f}, "
         f"w = {bc['combinations']['cohen_w']:.3f}.",
-        f"- **Face frequencies** ({bc['faces']['faces']} faces): chi-square = {bc['faces']['chi_square']:.2f}, "
+        f"- **Face frequencies** (*{ROLES['exploratory.bias_checks']}*; {bc['faces']['faces']} faces): "
+        f"chi-square = {bc['faces']['chi_square']:.2f}, "
         f"df = 5, p = {bc['faces']['p_value']:.3f}, w = {bc['faces']['cohen_w']:.3f}; counts "
         + ", ".join(f"{k}: {v}" for k, v in bc["faces"]["observed"].items()) + ".",
         "",
-        "**Repeats by combination** (descriptive):",
+        f"**Repeats by combination** (descriptive; *{ROLES['exploratory.repeats_by_combination']}*):",
         "",
         "| Combination | Times as previous roll | Repeated | Expected (fair) |",
         "|---|---|---|---|",
@@ -1022,7 +1096,8 @@ def write_report(path: Path, r: dict, figure_names: dict) -> None:
         lines.append(f"| {row['combination']} | {row['times_as_previous_roll']} | {row['repeats']} | "
                      f"{row['expected_repeats_fair']:.1f} |")
 
-    lines += ["", "## 6. Data-quality check: pass-line balance replay", ""]
+    lines += ["", "## 6. Data-quality check: pass-line balance replay", "",
+              f"*Role: {ROLES['data_quality_balance_replay']}.*", ""]
     if bal.get("replayed"):
         lines += [
             f"Replaying a ${bal['bet']} pass-line bet on every come-out roll from ${bal['starting_balance']} gives "

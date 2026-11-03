@@ -121,3 +121,24 @@ def test_end_to_end(tmp_path):
     ro = results["ruled_out"]
     assert ro["upper_bound_95_exact_binomial"] > ro["observed_rate"]
     assert len(fig["shuffled_exact"]) == 500
+
+
+def test_overlap_variance_inflation():
+    # Fair dice: about 0.4% extra variance for combination repeats and 3% for total repeats.
+    combos = sup.overlap_variance_inflation(sup.COMBO_PROBS, 1000)
+    totals = sup.overlap_variance_inflation([an.FAIR_TOTAL_PROBS[t] for t in range(2, 13)], 1000)
+    assert combos == pytest.approx(0.0044, abs=0.0003)
+    assert totals == pytest.approx(0.0317, abs=0.0005)
+    # Check the formula against simulated fair sequences.
+    rng = np.random.default_rng(1)
+    seqs = rng.choice(len(sup.COMBO_PROBS), size=(4000, 1001), p=sup.COMBO_PROBS)
+    counts = (seqs[:, 1:] == seqs[:, :-1]).sum(axis=1)
+    q = an.FAIR_EXACT_REPEAT
+    binomial_var = 1000 * q * (1 - q)
+    assert counts.var(ddof=1) == pytest.approx(binomial_var * (1 + combos), rel=0.08)
+
+
+def test_every_result_has_a_role():
+    assert all(isinstance(v, str) and v for v in sup.ROLES.values())
+    assert sup.ROLES["exploratory.strategy_repeats"].startswith(sup.PREREGISTERED)
+    assert sup.ROLES["exploratory.weighted_repeat_count"].startswith(sup.POST_HOC)
