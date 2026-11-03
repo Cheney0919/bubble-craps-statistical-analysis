@@ -6,6 +6,8 @@ These analyses support the written report. **None of them changes a confirmatory
 
 ## 1. Effect sizes for the pre-registered comparisons
 
+*Role: descriptive; added after data collection to meet the reporting requirements.* For H1 and H2, Cohen's h is the standardized gap between the observed repeat rate and the shuffled baseline. It describes the size of the difference; the permutation test remains the formal inference, because adjacent pairs overlap.
+
 Benchmarks (Cohen, 1988): h 0.2 small, 0.5 medium, 0.8 large; w 0.1 small, 0.3 medium, 0.5 large.
 
 | Comparison | Observed | Reference | Difference | Effect size |
@@ -16,7 +18,7 @@ Benchmarks (Cohen, 1988): h 0.2 small, 0.5 medium, 0.8 large; w 0.1 small, 0.3 m
 | H3 check (come-outs after a non-7) | 17.38% | 14.40% | +2.98 points | h = 0.082; risk ratio 1.21; odds ratio 1.25 |
 | Sanity check: totals vs. fair dice | chi-square = 12.59 | 1001 rolls | | w = 0.112 |
 
-**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls.** With one session the bootstrap draws on about 20 non-overlapping 50-roll stretches, so it is itself noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.
+**95% intervals: preregistered block bootstrap vs. textbook intervals assuming independent rolls** (*added after data collection, as a reporting check*). With one session the bootstrap draws on about 20 non-overlapping 50-roll stretches, so it is itself noisy; here it is mostly narrower than the independence-based intervals. No conclusion depends on which is used.
 
 | Quantity | Estimate | Block bootstrap | Assuming independence |
 |---|---|---|---|
@@ -27,6 +29,8 @@ Benchmarks (Cohen, 1988): h 0.2 small, 0.5 medium, 0.8 large; w 0.1 small, 0.3 m
 | Difference (point set minus come-out) | 0.26% | [-3.93%, 3.42%] | [-4.85%, 5.38%] (unpooled Wald) |
 
 ## 2. What the data rule out (H1)
+
+*Role: added after data collection (planned in earlier drafts; the final preregistration specifies two-sided intervals).*
 
 - Observed exact-repeat rate 4.30%; shuffled baseline 5.10%.
 - One-sided 95% upper bound: 5.33% (moving-block bootstrap, the preregistered interval method); 5.51% (exact binomial, treating pairs as independent).
@@ -41,6 +45,8 @@ Note: Translating the bound into stickiness assumes the machine, if streaky, cop
 
 ## 3. Power for the design actually run
 
+This is a sensitivity analysis for the achieved design: it restates the smallest effect each test detects with the sample actually collected. It is not post hoc "observed power", which would plug in the observed effect and only restate the p-value.
+
 One-sided alpha = 0.05 and 80% power, normal approximation with Cohen's h (equivalent to statsmodels' `NormalIndPower`). The last column is the preregistration's quicker approximation, which uses the standard error under the null only and so gives slightly smaller values.
 
 | Test | Sample | Fair value | Smallest effect detected 80% of the time | h | Two-sided | Bonferroni 0.025 | Preregistration approx. |
@@ -53,9 +59,13 @@ One-sided alpha = 0.05 and 80% power, normal approximation with Cohen's h (equiv
 
 The stickiness at which the 3/11 bet breaks even (0.74%, an overall repeat rate of 5.79%, h = 0.031) would be detected only 25% of the time with this sample; 80% power would need about 6,526 pairs.
 
+The formulas treat pairs as independent. Under independence, overlapping pairs (which share a roll) raise the variance of the repeat count by only 0.4% for combinations and 3.2% for totals; section 4 checks the tests directly.
+
 ![H1 power curve](h1_power_curve.png)
 
 ## 4. Simulation check of the tests
+
+*Role: checks how the tests behave; not an analysis of the data.*
 
 H1: 1,000 simulated sessions of fair dice per row (1,001 rolls, 999 shuffles each), in which each roll copies the previous combination with the stated probability.
 
@@ -66,6 +76,9 @@ H1: 1,000 simulated sessions of fair dice per row (1,001 rolls, 999 shuffles eac
 | 1.0% | 6.04% | 34.9% | 1.5% | 36.9% |
 | 2.0% | 6.99% | 80.3% | 1.3% | 81.1% |
 | 3.0% | 7.94% | 97.8% | 0.5% | 97.9% |
+
+A recording error that copies the previous entry with probability e produces exactly this sequence model, so the same rows show how often copy errors at rate e would make H1 falsely significant.
+
 
 H3: simulated pass-line sessions of 1,000 rolls starting on a come-out roll.
 
@@ -78,20 +91,22 @@ With fair dice, the simulated spread of the difference (2.59 points) is close to
 
 ## 5. Exploratory analyses (no reject / fail-to-reject decisions)
 
-**Repeats after the strategy's numbers** (exact 95% intervals):
+Each item is tagged *listed in the preregistration* (named as exploratory in `docs/preregistration.md`) or *added after data collection* (chosen after seeing the data; hypothesis-generating only).
+
+**Repeats after the strategy's numbers** (exact 95% intervals; *listed in the preregistration as betting-strategy estimates*):
 
 | After a... | Rolls following | Same total again | Rate [95% CI] | Fair | Break-even |
 |---|---|---|---|---|---|
 | 2 or 12 | 60 | 1 | 1.7% [0.0%, 8.9%] | 2.8% | 3.2% |
 | 3 or 11 | 114 | 3 | 2.6% [0.5%, 7.5%] | 5.6% | 6.2% |
 
-- **Weighted repeat count** (a repeated double counts 2, any other repeat 1; listed as a supporting check in planning drafts but not in the final preregistration): observed 47, shuffled mean 55.6, one-sided p = 0.876.
-- **Consecutive rolls sharing at least one face** (single sticky die): 52.2% observed vs. 51.3% in shuffles (fair dice 51.4%); one-sided p = 0.291.
-- **First vs. second half:** exact-repeat rate 4.0% vs. 4.6% (Fisher two-sided p = 0.76); point-set 7 rate 17.0% vs. 17.8% (p = 0.84).
-- **Combination frequencies** (21 categories, 1001 rolls): chi-square = 23.09, df = 20, p = 0.284, w = 0.152.
-- **Face frequencies** (2002 faces): chi-square = 4.94, df = 5, p = 0.424, w = 0.050; counts 1: 331, 2: 322, 3: 351, 4: 308, 5: 357, 6: 333.
+- **Weighted repeat count** (*added after data collection; a supporting check in planning drafts, not in the final preregistration*; a repeated double counts 2, any other repeat 1): observed 47, shuffled mean 55.6, one-sided p = 0.876.
+- **Consecutive rolls sharing at least one face** (*listed in the preregistration as shared die faces*; single sticky die): 52.2% observed vs. 51.3% in shuffles (fair dice 51.4%); one-sided p = 0.291.
+- **First vs. second half** (*listed in the preregistration as early vs. late*): exact-repeat rate 4.0% vs. 4.6% (Fisher two-sided p = 0.76); point-set 7 rate 17.0% vs. 17.8% (p = 0.84).
+- **Combination frequencies** (*added after data collection*; 21 categories, 1001 rolls): chi-square = 23.09, df = 20, p = 0.284, w = 0.152.
+- **Face frequencies** (*added after data collection*; 2002 faces): chi-square = 4.94, df = 5, p = 0.424, w = 0.050; counts 1: 331, 2: 322, 3: 351, 4: 308, 5: 357, 6: 333.
 
-**Repeats by combination** (descriptive):
+**Repeats by combination** (descriptive; *listed in the preregistration as individual combinations*):
 
 | Combination | Times as previous roll | Repeated | Expected (fair) |
 |---|---|---|---|
@@ -118,6 +133,8 @@ With fair dice, the simulated spread of the difference (2.59 points) is close to
 | 6-6 | 32 | 1 | 0.9 |
 
 ## 6. Data-quality check: pass-line balance replay
+
+*Role: data-quality check (see docs/deviations.md); the win rate is descriptive, added after data collection.*
 
 Replaying a $3 pass-line bet on every come-out roll from $100 gives an ending balance of $40 (recorded: $40; matches). 298 rounds were decided: 139 won, 159 lost (win rate 46.6%, exact 95% CI [40.9%, 52.5%]; fair 49.3%). Lowest balance during the session: $22. Bet still open at the end: no.
 
