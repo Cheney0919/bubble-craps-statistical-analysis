@@ -2,15 +2,19 @@
 
 ## Testing Player Claims of Repeating Rolls and Badly Timed Sevens on a Bubble Craps Machine
 
-This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the agreed rules for data collection, cleaning, and analysis before formal data are collected.
+This repository documents a pre-registered observational study of one physical bubble-craps machine, observed for 1,000 consecutive rolls in a single session. It contains the rules for data collection, cleaning, and analysis agreed before any data were collected, the collected data, and the results.
 
 The study tests two player claims: that the same dice combination tends to come up again on the next roll, and that 7s come more often when they cost a pass-line bettor. It does **not** attempt to prove that all bubble-craps machines are fair or unfair, or that a casino intentionally changes outcomes in response to bets.
 
 ## Current status
 
-**Planning stage. No formal study data have been collected yet. Collection is planned for November 1, 2026 at Caesars Virginia.**
+**Data collection and analysis complete.** 1,000 rolls were recorded on one machine at Caesars Virginia on November 1, 2026 (2:03–4:24 PM EST).
 
-Before the formal session, the group will complete the checklist, commit the final protocol, and record that commit's hash. There is no pilot; a short on-arrival check, with nothing recorded, confirms the machine's history display before logging starts.
+- Pre-registered tests: [`results/analysis_report.md`](results/analysis_report.md). Neither player claim was supported: H1 one-sided p = 0.889, H3 one-sided p = 0.460 (fail to reject both).
+- Effect sizes, power for the design actually run, and labelled exploratory analyses: [`results/supplementary_report.md`](results/supplementary_report.md).
+- Deviations from the plan, with their effect on the analyses: [`docs/deviations.md`](docs/deviations.md).
+
+The sections below describe the plan as it was fixed before collection.
 
 ## Research questions
 
@@ -61,6 +65,7 @@ The cleaning and analysis scripts were written and tested on simulated logs **be
 pip install -r requirements.txt
 python scripts/prepare_data.py   # validate data/raw/, write data/cleaned/analysis_data.csv
 python scripts/analyze.py        # run the pre-registered tests, write results/analysis_report.md
+python scripts/supplementary_analysis.py  # effect sizes, power, exploratory analyses (results/supplementary_report.md)
 ```
 
 To try the pipeline on simulated data, or run the tests, see [`scripts/README.md`](scripts/README.md).
@@ -73,7 +78,7 @@ data/simulated/    Simulated logs for testing (git-ignored).
 docs/              Preregistration, protocols, checklists, and documentation.
 scripts/           Cleaning, analysis, and simulation scripts.
 tests/             Automated tests (pytest) for the scripts.
-results/           Validation summary and analysis report.
+results/           Validation summary, analysis report, supplementary report, and figures.
 ```
 
 ## Collaboration and course requirements
